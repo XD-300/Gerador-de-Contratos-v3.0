@@ -1,0 +1,38 @@
+PLACEHOLDERS DISPONÍVEIS PARA TEMPLATES:
+
+PLACEHOLDERS PRINCIPAIS:
+{{BAIRRO}}
+{{CARGA HORÁRIA}}
+{{CEP}}
+{{CID/EST}}
+{{CONTRATO}}
+{{CPF DO ALUNO}}
+{{DATA}}
+{{DESCONTO}}
+{{ENDEREÇO COMPLETO}}
+{{N CS}}
+{{NOME COMPLETO}}
+{{NOME DO ALUNO}}
+{{NÚMERO DE PARCELAS}}
+{{NÚMERO DO CPF}}
+{{PROFISSIONALIZANTE}}
+{{RG ALUNO}}
+{{RG RESPONSAVEL}}
+{{TELEFONE}}
+{{VALOR PARCELA}}
+{{VALOR TOTAL}}
+{{VALOR À VISTA}}
+
+PLACEHOLDERS EXTRAS:
+{{MODELO}}
+{{FORMA_PAGAMENTO}}
+{{DATA_GERACAO}}
+{{VERSAO}}
+
+INSTRUÇÕES:
+1. Use estes placeholders exatamente como mostrado (com chaves duplas)
+2. O sistema substituirá automaticamente pelos dados do formulário
+3. Placeholders não encontrados permanecerão vazios
+4. Teste com o template exemplo primeiro
+
+Total: 25 placeholders disponíveis

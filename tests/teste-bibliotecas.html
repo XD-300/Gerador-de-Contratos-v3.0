@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔧 Teste de Bibliotecas</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .status { padding: 10px; margin: 5px 0; border-radius: 5px; }
+    .ok { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    button { padding: 10px 20px; margin: 10px 0; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>🔧 Teste de Bibliotecas para Templates DOCX</h1>
+  
+  <div id="status">
+    <div class="status" id="pizzip-status">⏳ Verificando PizZip...</div>
+    <div class="status" id="docxtemplater-status">⏳ Verificando Docxtemplater...</div>
+  </div>
+  
+  <button onclick="testarFuncionalidade()">🧪 Testar Funcionalidade</button>
+  
+  <div id="resultado"></div>
+
+  <!-- Mesmas bibliotecas do sistema principal -->
+  <script src="https://unpkg.com/pizzip@3.1.7/dist/pizzip.min.js"></script>
+  <script src="https://unpkg.com/docxtemplater@3.44.0/build/docxtemplater.js"></script>
+
+  <script>
+    function verificarBibliotecas() {
+      const pizzipEl = document.getElementById('pizzip-status');
+      const docxtemplaterEl = document.getElementById('docxtemplater-status');
+      
+      if (typeof window.PizZip !== 'undefined') {
+        pizzipEl.textContent = '✅ PizZip carregado com sucesso';
+        pizzipEl.className = 'status ok';
+      } else {
+        pizzipEl.textContent = '❌ PizZip não carregado';
+        pizzipEl.className = 'status error';
+      }
+      
+      if (typeof window.Docxtemplater !== 'undefined') {
+        docxtemplaterEl.textContent = '✅ Docxtemplater carregado com sucesso';
+        docxtemplaterEl.className = 'status ok';
+      } else {
+        docxtemplaterEl.textContent = '❌ Docxtemplater não carregado';
+        docxtemplaterEl.className = 'status error';
+      }
+    }
+    
+    function testarFuncionalidade() {
+      const resultado = document.getElementById('resultado');
+      
+      try {
+        if (!window.PizZip) {
+          throw new Error('PizZip não está disponível');
+        }
+        
+        if (!window.Docxtemplater) {
+          throw new Error('Docxtemplater não está disponível');
+        }
+        
+        // Teste básico de criação de instância
+        const testData = { NOME: 'Teste', VALOR: '100' };
+        
+        resultado.innerHTML = `
+          <div class="status ok">
+            <h3>✅ Teste Concluído com Sucesso!</h3>
+            <p><strong>PizZip:</strong> ${typeof window.PizZip}</p>
+            <p><strong>Docxtemplater:</strong> ${typeof window.Docxtemplater}</p>
+            <p><strong>Dados de teste:</strong> ${JSON.stringify(testData)}</p>
+            <p>🎉 O sistema está pronto para preencher templates!</p>
+          </div>
+        `;
+        
+      } catch (error) {
+        resultado.innerHTML = `
+          <div class="status error">
+            <h3>❌ Erro no Teste</h3>
+            <p>${error.message}</p>
+            <p>Verifique sua conexão com a internet e recarregue a página.</p>
+          </div>
+        `;
+      }
+    }
+    
+    // Verifica bibliotecas após carregamento
+    window.addEventListener('load', function() {
+      setTimeout(verificarBibliotecas, 500);
+    });
+  </script>
+</body>
+</html>

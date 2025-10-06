@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Debug - Sistema de Cálculo</title>
+</head>
+<body>
+    <h1>Teste de Debug - Sistema de Cálculo</h1>
+    
+    <div>
+        <label>Forma de Pagamento:</label>
+        <select id="forma">
+            <option value="">Selecione...</option>
+            <option value="Cartão">Cartão</option>
+            <option value="Boleto">Boleto</option>
+            <option value="À vista">À vista</option>
+        </select>
+    </div>
+    
+    <div>
+        <label>Total:</label>
+        <input type="text" id="total" placeholder="R$ 0,00">
+    </div>
+    
+    <div>
+        <label>Número de Parcelas:</label>
+        <input type="number" id="nParcelas" min="1" max="60" value="1">
+    </div>
+    
+    <div>
+        <label>Valor da Parcela:</label>
+        <input type="text" id="parcela" placeholder="R$ 0,00" readonly>
+    </div>
+    
+    <div>
+        <label>Auto-cálculo:</label>
+        <input type="checkbox" id="auto" checked>
+    </div>
+    
+    <button onclick="debugSistema()">🚀 Debug Sistema</button>
+    <button onclick="debugCalculo()">🔧 Debug Cálculo</button>
+    <button onclick="testarCalculo()">🧪 Testar Cálculo</button>
+    
+    <div id="console-output" style="background: #f0f0f0; padding: 10px; margin-top: 20px; max-height: 400px; overflow-y: auto; font-family: monospace; white-space: pre-wrap;"></div>
+
+    <script>
+        // Interceptar console.log para mostrar na página
+        const originalLog = console.log;
+        const outputDiv = document.getElementById('console-output');
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            outputDiv.textContent += args.join(' ') + '\n';
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        };
+        
+        console.log('🚀 Sistema de debug iniciado');
+        
+        // Interceptar erros JavaScript
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.log(`❌ ERRO JS: ${message}`);
+            console.log(`📍 Arquivo: ${source}, Linha: ${lineno}, Coluna: ${colno}`);
+            if (error && error.stack) {
+                console.log(`🔍 Stack: ${error.stack}`);
+            }
+            return false;
+        };
+        
+        // Interceptar erros de promises rejeitadas
+        window.addEventListener('unhandledrejection', function(event) {
+            console.log(`❌ Promise rejeitada: ${event.reason}`);
+        });
+    </script>
+    
+    <!-- Carregar os módulos da aplicação -->
+    <script src="src/core/utils.js"></script>
+    <script src="calculations-compatible.js"></script>
+    
+    <script>
+        // Aguardar carregamento completo
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 DOM carregado');
+            
+            // Verificar se funções estão disponíveis
+            setTimeout(() => {
+                console.log('🔍 Verificando funções globais:');
+                console.log('  - debugSistema:', typeof window.debugSistema);
+                console.log('  - debugCalculo:', typeof window.debugCalculo);  
+                console.log('  - testarCalculo:', typeof window.testarCalculo);
+                console.log('  - ContractCalculations:', typeof window.ContractCalculations);
+                console.log('  - get:', typeof window.get);
+                console.log('  - parseBRL:', typeof window.parseBRL);
+                console.log('  - fmtBRL:', typeof window.fmtBRL);
+                console.log('  - $:', typeof window.$);
+                
+                // Teste básico de função
+                if (typeof window.get === 'function') {
+                    try {
+                        const teste = window.get('#total');
+                        console.log('✅ Função get() funcionando, resultado:', teste);
+                    } catch (e) {
+                        console.log('❌ Erro ao testar get():', e);
+                    }
+                } else {
+                    console.log('❌ Função get() não está disponível');
+                }
+                
+                // Teste básico de ContractCalculations
+                if (typeof window.ContractCalculations === 'function' || typeof window.ContractCalculations === 'object') {
+                    try {
+                        console.log('✅ ContractCalculations disponível');
+                        if (window.ContractCalculations.recalculate) {
+                            console.log('✅ Método recalculate disponível');
+                        } else {
+                            console.log('❌ Método recalculate não encontrado');
+                        }
+                    } catch (e) {
+                        console.log('❌ Erro ao verificar ContractCalculations:', e);
+                    }
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste Docxtemplater</title>
+</head>
+<body>
+  <h1>🧪 Teste do Sistema Docxtemplater</h1>
+  
+  <div style="margin: 20px; padding: 20px; border: 1px solid #ddd;">
+    <h2>✅ Verificação das Bibliotecas</h2>
+    <p>PizZip: <span id="pizzip-status">❌ Não carregado</span></p>
+    <p>Docxtemplater: <span id="docx-status">❌ Não carregado</span></p>
+    
+    <h2>📋 Dados de Teste</h2>
+    <button onclick="testarPreenchimento()">Testar Preenchimento de Template</button>
+    
+    <div id="resultado" style="margin-top: 20px; padding: 10px; background: #f5f5f5;">
+      Clique no botão para testar...
+    </div>
+  </div>
+
+  <!-- Mesmas bibliotecas do sistema principal -->
+  <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.7/dist/pizzip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.44.0/build/docxtemplater.js"></script>
+
+  <script>
+    // Verifica se as bibliotecas foram carregadas
+    document.addEventListener('DOMContentLoaded', function() {
+      const pizzipStatus = document.getElementById('pizzip-status');
+      const docxStatus = document.getElementById('docx-status');
+      
+      if (window.PizZip) {
+        pizzipStatus.textContent = '✅ Carregado';
+        pizzipStatus.style.color = 'green';
+      }
+      
+      if (window.Docxtemplater) {
+        docxStatus.textContent = '✅ Carregado';
+        docxStatus.style.color = 'green';
+      }
+    });
+    
+    function testarPreenchimento() {
+      const resultado = document.getElementById('resultado');
+      
+      try {
+        // Dados de teste
+        const templateData = {
+          CONTRATO: 'CT-2024-001',
+          NOME: 'João da Silva',
+          CPF: '123.456.789-00',
+          ENDERECO: 'Rua das Flores, 123',
+          TELEFONE: '(11) 99999-9999',
+          EMAIL: 'joao@email.com',
+          VALOR_TOTAL: 'R$ 1.500,00',
+          PARCELAS: '10x',
+          DATA_ATUAL: new Date().toLocaleDateString('pt-BR'),
+          BLOCO_AVISTA: false,
+          BLOCO_CARTAO: true,
+          BLOCO_BOLETO: false
+        };
+        
+        resultado.innerHTML = `
+          <h3>✅ Teste Concluído</h3>
+          <p><strong>PizZip:</strong> ${window.PizZip ? 'OK' : 'ERRO'}</p>
+          <p><strong>Docxtemplater:</strong> ${window.Docxtemplater ? 'OK' : 'ERRO'}</p>
+          <p><strong>Dados preparados:</strong> ${Object.keys(templateData).length} campos</p>
+          <pre>${JSON.stringify(templateData, null, 2)}</pre>
+        `;
+        
+      } catch (error) {
+        resultado.innerHTML = `
+          <h3>❌ Erro no Teste</h3>
+          <p>${error.message}</p>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>

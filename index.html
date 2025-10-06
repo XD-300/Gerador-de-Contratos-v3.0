@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gerador de Contratos (Web)</title>
+  
+  <!-- Folha de estilos -->
+  <link rel="stylesheet" href="src/styles/styles.css">
+  <link rel="stylesheet" href="src/auto-calc/styles.css">
+  
+  <!-- Bibliotecas externas -->
+  <script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"></script>
+  
+  <!-- Carregamento sequencial das bibliotecas de template com múltiplos fallbacks -->
+  <script>
+    // Função para carregar scripts sequencialmente com fallback
+    function loadScriptSequentially(srcArray) {
+      return new Promise((resolve, reject) => {
+        let currentIndex = 0;
+        
+        function tryLoad() {
+          if (currentIndex >= srcArray.length) {
+            reject(new Error('Todas as URLs falharam'));
+            return;
+          }
+          
+          const script = document.createElement('script');
+          script.src = srcArray[currentIndex];
+          
+          script.onload = () => {
+            console.log(`✅ Carregado: ${srcArray[currentIndex]}`);
+            resolve();
+          };
+          
+          script.onerror = () => {
+            console.warn(`❌ Falhou: ${srcArray[currentIndex]}`);
+            currentIndex++;
+            document.head.removeChild(script);
+            tryLoad();
+          };
+          
+          document.head.appendChild(script);
+        }
+        
+        tryLoad();
+      });
+    }
+
+    // Carrega bibliotecas na ordem correta com múltiplos CDNs
+    async function loadTemplateLibraries() {
+      try {
+        console.log('📦 Carregando PizZip...');
+        await loadScriptSequentially([
+          'https://unpkg.com/pizzip@3.1.7/dist/pizzip.min.js',
+          'https://cdn.jsdelivr.net/npm/pizzip@3.1.7/dist/pizzip.min.js',
+          'https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.7/pizzip.min.js'
+        ]);
+        
+        console.log('📦 Carregando Docxtemplater...');
+        await loadScriptSequentially([
+          'https://unpkg.com/docxtemplater@3.44.0/build/docxtemplater.js',
+          'https://cdn.jsdelivr.net/npm/docxtemplater@3.44.0/build/docxtemplater.js'
+        ]);
+
+        // 🔗 ALIAS ESSENCIAL: algumas builds expõem window.docxtemplater (minúsculo)
+        if (window.docxtemplater && !window.Docxtemplater) {
+          window.Docxtemplater = window.docxtemplater;
+        }
+        
+        console.log('✅ Bibliotecas de template carregadas com sucesso!');
+        
+        // Marca as bibliotecas como prontas
+        window.templateLibrariesReady = !!(window.PizZip && (window.Docxtemplater || window.docxtemplater));
+        
+        // Dispara evento customizado
+        window.dispatchEvent(new Event('templateLibrariesLoaded'));
+        
+      } catch (error) {
+        console.error('❌ Erro ao carregar bibliotecas via CDN:', error);
+        console.log('🔄 Tentando carregamento alternativo...');
+        
+        // Fallback: tentar carregamento via import dinâmico
+        try {
+          await ensureFallbackLibraries();
+        } catch (fallbackError) {
+          console.error('❌ Falha em todos os métodos de carregamento:', fallbackError);
+          window.templateLibrariesReady = false;
+        }
+      }
+    }
+
+    // Sistema de fallback com import dinâmico
+    async function ensureFallbackLibraries() {
+      console.log('🔄 Tentando carregar via import dinâmico...');
+      
+      try {
+        // Fallback para PizZip
+        if (!window.PizZip) {
+          const PizZipModule = await import('https://unpkg.com/pizzip@3.1.7/dist/pizzip.js');
+          window.PizZip = PizZipModule.default || PizZipModule;
+        }
+        
+        // Fallback para Docxtemplater
+        if (!window.Docxtemplater) {
+          try {
+            const m = await import('https://unpkg.com/docxtemplater@3.44.0/build/docxtemplater.js');
+            window.Docxtemplater = window.Docxtemplater || window.docxtemplater || m.default || m;
+          } catch(e) { /* ignora; script tag já cobre */ }
+        }
+
+        // 🔗 ALIAS ESSENCIAL: algumas builds expõem window.docxtemplater (minúsculo)
+        if (window.docxtemplater && !window.Docxtemplater) {
+          window.Docxtemplater = window.docxtemplater;
+        }
+        
+        console.log('✅ Bibliotecas carregadas via fallback!');
+        window.templateLibrariesReady = !!(window.PizZip && (window.Docxtemplater || window.docxtemplater));
+        window.dispatchEvent(new Event('templateLibrariesLoaded'));
+        
+      } catch (error) {
+        console.error('❌ Erro no carregamento de fallback:', error);
+        throw error;
+      }
+    }
+
+    // Inicia carregamento quando DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', function() {
+      loadTemplateLibraries();
+      
+      // Verificação periódica das bibliotecas
+      let checkCount = 0;
+      const maxChecks = 10;
+      
+      const checkLibraries = () => {
+        checkCount++;
+        console.log(`🔍 Verificação ${checkCount}/${maxChecks} - Status das bibliotecas:`);
+        console.log('docx:', typeof window.docx !== 'undefined' ? '✅' : '❌');
+        console.log('PizZip:', typeof window.PizZip !== 'undefined' ? '✅' : '❌');
+        console.log('Docxtemplater:', typeof (window.Docxtemplater || window.docxtemplater) !== 'undefined' ? '✅' : '❌');
+        console.log('Template Ready:', (window.PizZip && (window.Docxtemplater || window.docxtemplater)) ? '✅' : '❌');
+        
+        // Se as bibliotecas essenciais não estão carregadas e ainda há tentativas
+        if ((!window.PizZip || !(window.Docxtemplater || window.docxtemplater)) && checkCount < maxChecks) {
+          console.log(`🔄 Bibliotecas não carregadas, tentativa ${checkCount + 1} em 2 segundos...`);
+          setTimeout(checkLibraries, 2000);
+        } else if (!window.PizZip || !(window.Docxtemplater || window.docxtemplater)) {
+          console.error('❌ Falha crítica: Bibliotecas de template não carregaram após todas as tentativas');
+        } else {
+          console.log('✅ Todas as bibliotecas estão prontas!');
+        }
+      };
+      
+      // Primeira verificação após 2 segundos
+      setTimeout(checkLibraries, 2000);
+    });
+  </script>
+
+  <!-- Sistema de persistência de preferências -->
+  <script>
+    // Salva e restaura as preferências do usuário
+    document.addEventListener('DOMContentLoaded', function() {
+      // Elementos que serão persistidos
+      const modeloSelect = document.getElementById('modelo');
+      const formaSelect = document.getElementById('forma');
+      
+      // Preenche data automaticamente com a data atual
+      function preencherDataAtual() {
+        const dataInput = document.getElementById('data');
+        if (dataInput && !dataInput.value) {
+          const hoje = new Date();
+          const dia = String(hoje.getDate()).padStart(2, '0');
+          const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+          const ano = hoje.getFullYear();
+          const dataFormatada = `${dia}/${mes}/${ano}`;
+          
+          dataInput.value = dataFormatada;
+          console.log('📅 Data atual preenchida automaticamente:', dataFormatada);
+        }
+      }
+      
+      // Restaura valores salvos ao carregar a página
+      function restaurarPreferencias() {
+        const modeloSalvo = localStorage.getItem('gerador_modelo_contrato');
+        const formaSalva = localStorage.getItem('gerador_forma_pagamento');
+        
+        if (modeloSalvo && modeloSelect) {
+          modeloSelect.value = modeloSalvo;
+          console.log('🔄 Modelo restaurado:', modeloSalvo);
+        }
+        
+        if (formaSalva && formaSelect) {
+          formaSelect.value = formaSalva;
+          console.log('🔄 Forma de pagamento restaurada:', formaSalva);
+          
+          // Dispara evento change para atualizar campos condicionais
+          formaSelect.dispatchEvent(new Event('change'));
+        }
+        
+        // Preenche a data atual sempre que a página carregar
+        preencherDataAtual();
+      }
+      
+      // Salva modelo quando alterado
+      if (modeloSelect) {
+        modeloSelect.addEventListener('change', function() {
+          localStorage.setItem('gerador_modelo_contrato', this.value);
+          console.log('💾 Modelo salvo:', this.value);
+        });
+      }
+      
+      // Salva forma de pagamento quando alterada
+      if (formaSelect) {
+        formaSelect.addEventListener('change', function() {
+          localStorage.setItem('gerador_forma_pagamento', this.value);
+          console.log('💾 Forma de pagamento salva:', this.value);
+        });
+      }
+      
+      // Restaura preferências após breve delay para garantir que os elementos estejam prontos
+      setTimeout(restaurarPreferencias, 100);
+    });
+  </script>
+
+  <!-- Sistema de Cálculo Automático (ordem importante) -->
+  <script src="src/auto-calc/engine.js"></script>
+  <script src="src/auto-calc/init.js"></script>
+  
+  <!-- Módulos JavaScript da aplicação -->
+  <script src="src/core/exports.js"></script>
+  <script src="src/core/python-examples.js"></script>
+  <script src="src/core/main.js"></script>
+</head>
+<body>
+  <header>
+    <h1>🎯 Gerador de Contratos v2.1</h1>
+    <div class="sub">
+      Sistema profissional para geração de contratos educacionais com cálculo automático, 
+      templates personalizáveis e exportação em PDF/DOCX/JSON.
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- Configurações gerais -->
+    <section class="card grid cols-4" id="sec-geral">
+      <div>
+        <label>Modelo do Contrato</label>
+        <select id="modelo">
+          <option value="Contrato_EJA">Contrato EJA</option>
+          <option value="Contrato_OM">Contrato OM</option>
+          <option value="CONTRATO_OM_DK">Contrato OM-DK</option>
+          <option value="Contrato_TEC">Contrato Técnico</option>
+        </select>
+        <div id="templateStatus" class="hint" style="margin-top: 4px; display: none;">
+          <span id="templateIndicator">📄 Template: <span id="templateName">-</span></span>
+        </div>
+      </div>
+      <div>
+        <label>Forma de Pagamento</label>
+        <select id="forma">
+          <option value="À vista">À vista</option>
+          <option value="Cartão">Cartão de Crédito</option>
+          <option value="Boleto">Boleto Bancário</option>
+        </select>
+      </div>
+      <div>
+        <label>Data do Contrato</label>
+        <input id="data" placeholder="DD/MM/AAAA" autocomplete="off" />
+      </div>
+      <div class="inline" style="margin-top:22px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span class="pill" id="pill-status">Auto-cálculo ativo</span>
+          <label class="hint">
+            <input type="checkbox" id="auto" checked style="width:auto; margin-right:6px"/> 
+            Cálculo automático
+          </label>
+        </div>
+        <button type="button" class="btn ghost" id="btnExemplo" title="F5" style="font-size: 11px; padding: 6px 10px; width: auto; min-width: auto;">
+          📝 Exemplo
+        </button>
+      </div>
+    </section>
+
+    <!-- Dados do responsável financeiro -->
+    <section class="card">
+      <h2>Responsável Financeiro</h2>
+      <div class="grid cols-2">
+        <div>
+          <label>Nome completo</label>
+          <input id="nomeResp" placeholder="Ex.: Maria da Silva Santos" autocomplete="name" />
+        </div>
+        <div>
+          <label>Data de nascimento</label>
+          <input id="nascResp" placeholder="DD/MM/AAAA" autocomplete="bday" />
+        </div>
+        <div>
+          <label>CPF</label>
+          <input id="cpfResp" placeholder="000.000.000-00" autocomplete="off" />
+        </div>
+        <div>
+          <label>RG</label>
+          <input id="rgResp" placeholder="00.000.000-0" />
+        </div>
+        <div>
+          <label>Telefone</label>
+          <input id="telResp" placeholder="(99) 99999-9999" autocomplete="tel" />
+        </div>
+      </div>
+      
+      <hr style="border: none; border-top: 1px solid var(--border); margin: 16px 0" />
+      
+      <div class="grid cols-3">
+        <div>
+          <label>Endereço completo</label>
+          <input id="endereco" placeholder="Rua, Avenida..." autocomplete="address-line1" />
+        </div>
+        <div>
+          <label>Número</label>
+          <input id="numero" placeholder="123" />
+        </div>
+        <div>
+          <label>Bairro</label>
+          <input id="bairro" placeholder="Centro" />
+        </div>
+        <div>
+          <label>CEP</label>
+          <input id="cep" placeholder="00000-000" autocomplete="postal-code" />
+        </div>
+        <div>
+          <label>Cidade/UF</label>
+          <input id="cidadeUf" placeholder="São Paulo/SP" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Dados do aluno -->
+    <section class="card">
+      <h2>Dados do Aluno</h2>
+      <div class="grid cols-4">
+        <div style="grid-column: span 2;">
+          <label>Nome do aluno</label>
+          <input id="nomeAluno" placeholder="Nome completo do estudante" />
+        </div>
+        <div>
+          <label>Data de nascimento</label>
+          <input id="nascAluno" placeholder="DD/MM/AAAA" />
+        </div>
+        <div>
+          <label>Sexo</label>
+          <select id="sexoAluno">
+            <option value="">— Selecionar —</option>
+            <option value="M">Masculino</option>
+            <option value="F">Feminino</option>
+          </select>
+        </div>
+        <div>
+          <label>RG do aluno</label>
+          <input id="rgAluno" placeholder="00.000.000-0" />
+        </div>
+        <div>
+          <label>CPF do aluno</label>
+          <input id="cpfAluno" placeholder="000.000.000-00" />
+        </div>
+        <div>
+          <label>Registro Acadêmico (R.A)</label>
+          <input id="raAluno" placeholder="RA2024001" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Informações do curso -->
+    <section class="card">
+      <h2>Dados do Curso</h2>
+      <div class="grid cols-3">
+        <div>
+          <label>Curso profissionalizante</label>
+          <input id="curso" placeholder="Nome completo do curso" />
+        </div>
+        <div>
+          <label>Carga horária</label>
+          <input id="carga" placeholder="Ex.: 160h, 1200h" />
+        </div>
+        <div>
+          <label>Número do contrato</label>
+          <input id="contrato" placeholder="001/2025" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Informações financeiras -->
+    <section class="card">
+      <h2>Informações Financeiras</h2>
+      <div class="grid cols-4">
+        <div data-show="avista">
+          <label>Valor à vista</label>
+          <input id="avista" placeholder="R$ 0,00" />
+        </div>
+        <div data-show="boleto">
+          <label>Valor de entrada</label>
+          <input id="entrada" placeholder="R$ 0,00" />
+        </div>
+        <div data-show="cartao,boleto">
+          <label>Número de parcelas</label>
+          <input id="nParcelas" placeholder="Ex.: 12" />
+        </div>
+        <div data-show="cartao,boleto">
+          <label>Valor da parcela</label>
+          <input id="parcela" placeholder="R$ 0,00" />
+        </div>
+      </div>
+
+      <div class="grid cols-4" style="margin-top:16px">
+        <div data-show="boleto">
+          <label>Dia do vencimento</label>
+          <input id="diaVenc" placeholder="5, 10, 15..." />
+        </div>
+        <div data-show="boleto">
+          <label>Desconto aplicado</label>
+          <input id="desconto" placeholder="R$ 0,00" />
+        </div>
+        <div>
+          <label>Valor total do curso</label>
+          <input id="total" placeholder="R$ 0,00" />
+        </div>
+      </div>
+      
+      <div class="hint" style="margin-top:12px">
+        💡 <strong>Dica:</strong> Preencha pelo menos dois valores financeiros e o sistema calculará automaticamente os demais conforme a forma de pagamento escolhida.
+      </div>
+      
+      <!-- Botão de recálculo -->
+      <div style="margin-top: 16px; display: flex; justify-content: center;">
+        <button type="button" class="btn warn" id="btnCalcular" title="F9">
+          🔄 Recalcular Valores
+        </button>
+      </div>
+    </section>
+
+    <!-- Sistema de Templates -->
+    <section class="card">
+      <h2>📋 Sistema de Templates DOCX</h2>
+      <div class="grid cols-2" style="margin-bottom: 12px;">
+        <div>
+          <label>Template de Contrato</label>
+          <input type="file" id="templateUpload" accept=".docx" style="margin-bottom: 8px;" />
+          <div class="hint">Envie um arquivo .docx com placeholders {{CAMPO}}</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button type="button" class="btn primary" id="btnPreencherTemplate" disabled>
+            📝 Preencher Template
+          </button>
+          <button type="button" class="btn ghost" id="btnBaixarTemplate">
+            📄 Baixar Template Exemplo
+          </button>
+          <button type="button" class="btn ghost" id="btnVerPlaceholders">
+            🔍 Ver Placeholders
+          </button>
+          <button type="button" class="btn warn" id="btnTestarBibliotecas" style="font-size: 12px;">
+            🧪 Testar Bibliotecas
+          </button>
+        </div>
+      </div>
+      
+      <div id="templateInfo" class="hint" style="display: none; background: rgba(91,157,255,0.1); padding: 12px; border-radius: 8px; margin-top: 12px;">
+        <strong>Template carregado:</strong> <span id="templateNome"></span><br>
+        <small>Pronto para preenchimento automático com os dados do formulário</small>
+      </div>
+    </section>
+
+    <!-- Ações disponíveis -->
+    <section class="card">
+      <div class="actions">
+        <button type="button" class="btn primary" id="btnDocx" title="Ctrl+D">
+          📝 Gerar DOCX
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div>
+      <strong>Gerador de Contratos v2.1</strong> • 
+      Desenvolvido com HTML5, CSS3 e JavaScript • 
+      Exportação DOCX/JSON • 
+      Sistema de cálculo automático • 
+      Templates personalizáveis
+    </div>
+    <div style="margin-top: 8px; font-size: 11px; opacity: 0.8;">
+      ⌨️ Atalhos: Ctrl+D (DOCX) • F5 (Exemplo) • F9 (Recalcular)
+    </div>
+  </footer>
+
+</body>
+</html>

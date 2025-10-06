@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gerador de Contratos (Web) - Offline</title>
+  
+  <!-- Folha de estilos -->
+  <link rel="stylesheet" href="css/styles.css">
+  
+  <!-- Bibliotecas locais (versão offline) -->
+  <script src="libs/jspdf.min.js"></script>
+  <script src="libs/docx.min.js"></script>
+  
+  <!-- Módulos JavaScript da aplicação -->
+  <script src="js/utils.js"></script>
+  <script src="js/calculations.js"></script>
+  <script src="js/exports.js"></script>
+  <script src="js/main.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Gerador de Contratos (Web) 🔒 Offline</h1>
+    <div class="sub">
+      Sistema profissional para geração de contratos educacionais com cálculo automático e exportação em PDF/DOCX/JSON.
+      <span style="color: #22c55e; font-weight: bold;">✅ Funcionando 100% offline</span>
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- Configurações gerais -->
+    <section class="card grid cols-4" id="sec-geral">
+      <div>
+        <label>Modelo do Contrato</label>
+        <select id="modelo">
+          <option value="Contrato_EJA">Contrato EJA</option>
+          <option value="Contrato_OM">Contrato OM</option>
+          <option value="CONTRATO_OM_DK">Contrato OM-DK</option>
+          <option value="Contrato_TEC">Contrato Técnico</option>
+        </select>
+      </div>
+      <div>
+        <label>Forma de Pagamento</label>
+        <select id="forma">
+          <option value="À vista">À vista</option>
+          <option value="Cartão">Cartão de Crédito</option>
+          <option value="Boleto">Boleto Bancário</option>
+        </select>
+      </div>
+      <div>
+        <label>Data do Contrato</label>
+        <input id="data" placeholder="DD/MM/AAAA" autocomplete="off" />
+      </div>
+      <div class="inline" style="margin-top:22px">
+        <span class="pill" id="pill-status">Auto-cálculo ativo</span>
+        <label class="hint">
+          <input type="checkbox" id="auto" checked style="width:auto; margin-right:6px"/> 
+          Cálculo automático
+        </label>
+      </div>
+    </section>
+
+    <!-- Dados do responsável financeiro -->
+    <section class="card">
+      <h2>Responsável Financeiro</h2>
+      <div class="grid cols-2">
+        <div>
+          <label>Nome completo</label>
+          <input id="nomeResp" placeholder="Ex.: Maria da Silva Santos" autocomplete="name" />
+        </div>
+        <div>
+          <label>Data de nascimento</label>
+          <input id="nascResp" placeholder="DD/MM/AAAA" autocomplete="bday" />
+        </div>
+        <div>
+          <label>CPF</label>
+          <input id="cpfResp" placeholder="000.000.000-00" autocomplete="off" />
+        </div>
+        <div>
+          <label>RG</label>
+          <input id="rgResp" placeholder="00.000.000-0" />
+        </div>
+        <div>
+          <label>Telefone</label>
+          <input id="telResp" placeholder="(99) 99999-9999" autocomplete="tel" />
+        </div>
+      </div>
+      
+      <hr style="border: none; border-top: 1px solid var(--border); margin: 16px 0" />
+      
+      <div class="grid cols-3">
+        <div>
+          <label>Endereço completo</label>
+          <input id="endereco" placeholder="Rua, Avenida..." autocomplete="address-line1" />
+        </div>
+        <div>
+          <label>Número</label>
+          <input id="numero" placeholder="123" />
+        </div>
+        <div>
+          <label>Bairro</label>
+          <input id="bairro" placeholder="Centro" />
+        </div>
+        <div>
+          <label>CEP</label>
+          <input id="cep" placeholder="00000-000" autocomplete="postal-code" />
+        </div>
+        <div>
+          <label>Cidade/UF</label>
+          <input id="cidadeUf" placeholder="São Paulo/SP" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Dados do aluno -->
+    <section class="card">
+      <h2>Dados do Aluno</h2>
+      <div class="grid cols-4">
+        <div style="grid-column: span 2;">
+          <label>Nome do aluno</label>
+          <input id="nomeAluno" placeholder="Nome completo do estudante" />
+        </div>
+        <div>
+          <label>Data de nascimento</label>
+          <input id="nascAluno" placeholder="DD/MM/AAAA" />
+        </div>
+        <div>
+          <label>Sexo</label>
+          <select id="sexoAluno">
+            <option value="">— Selecionar —</option>
+            <option value="M">Masculino</option>
+            <option value="F">Feminino</option>
+          </select>
+        </div>
+        <div>
+          <label>RG do aluno</label>
+          <input id="rgAluno" placeholder="00.000.000-0" />
+        </div>
+        <div>
+          <label>CPF do aluno</label>
+          <input id="cpfAluno" placeholder="000.000.000-00" />
+        </div>
+        <div>
+          <label>Registro Acadêmico (R.A)</label>
+          <input id="raAluno" placeholder="RA2024001" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Informações do curso -->
+    <section class="card">
+      <h2>Dados do Curso</h2>
+      <div class="grid cols-3">
+        <div>
+          <label>Curso profissionalizante</label>
+          <input id="curso" placeholder="Nome completo do curso" />
+        </div>
+        <div>
+          <label>Carga horária</label>
+          <input id="carga" placeholder="Ex.: 160h, 1200h" />
+        </div>
+        <div>
+          <label>Número do contrato</label>
+          <input id="contrato" placeholder="001/2025" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Informações financeiras -->
+    <section class="card">
+      <h2>Informações Financeiras</h2>
+      <div class="grid cols-4">
+        <div>
+          <label>Valor total do curso</label>
+          <input id="total" placeholder="R$ 0,00" />
+        </div>
+        <div>
+          <label>Valor à vista</label>
+          <input id="avista" placeholder="R$ 0,00" />
+        </div>
+        <div>
+          <label>Desconto aplicado</label>
+          <input id="desconto" placeholder="R$ 0,00" />
+        </div>
+        <div>
+          <label>Valor da parcela</label>
+          <input id="parcela" placeholder="R$ 0,00" />
+        </div>
+      </div>
+
+      <div class="grid cols-4" style="margin-top:16px">
+        <div>
+          <label>Número de parcelas</label>
+          <input id="nParcelas" placeholder="Ex.: 12" />
+        </div>
+        <div data-show="cartao">
+          <label>Parcela no cartão</label>
+          <input id="parcCartao" placeholder="R$ 0,00" />
+        </div>
+        <div data-show="boleto">
+          <label>Valor de entrada</label>
+          <input id="entrada" placeholder="R$ 0,00" />
+        </div>
+        <div data-show="boleto">
+          <label>Parcela do boleto</label>
+          <input id="parcBoleto" placeholder="R$ 0,00" />
+        </div>
+        <div data-show="boleto">
+          <label>Dia do vencimento</label>
+          <input id="diaVenc" placeholder="5, 10, 15..." />
+        </div>
+      </div>
+      
+      <div class="hint" style="margin-top:12px">
+        💡 <strong>Dica:</strong> Preencha pelo menos dois valores financeiros e o sistema calculará automaticamente os demais conforme a forma de pagamento escolhida.
+      </div>
+    </section>
+
+    <!-- Ações disponíveis -->
+    <section class="card">
+      <div class="actions">
+        <button type="button" class="btn ghost" id="btnExemplo" title="F5">
+          📝 Preencher Exemplo
+        </button>
+        <button type="button" class="btn warn" id="btnCalcular" title="F9">
+          🔄 Recalcular
+        </button>
+        <button type="button" class="btn ok" id="btnJson" title="Ctrl+J">
+          📊 Baixar JSON
+        </button>
+        <button type="button" class="btn primary" id="btnPdf" title="Ctrl+S">
+          📄 Gerar PDF
+        </button>
+        <button type="button" class="btn docx" id="btnDocx" title="Ctrl+D">
+          📝 Gerar DOCX
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div>
+      <strong>Gerador de Contratos v2.0 Offline</strong> • 
+      Funcionando sem internet • 
+      Exportação PDF/DOCX/JSON • 
+      Sistema de cálculo automático
+    </div>
+    <div style="margin-top: 8px; font-size: 11px; opacity: 0.8;">
+      ⌨️ Atalhos: Ctrl+S (PDF) • Ctrl+D (DOCX) • Ctrl+J (JSON) • F5 (Exemplo) • F9 (Recalcular)
+    </div>
+  </footer>
+
+</body>
+</html>

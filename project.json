@@ -1,0 +1,64 @@
+{
+  "name": "Gerador de Contratos",
+  "version": "2.1.0",
+  "description": "Sistema profissional para geração de contratos educacionais",
+  "main": "index.html",
+  "scripts": {
+    "test": "Abra tests/teste-final-sistema.html",
+    "test-templates": "Abra tests/teste-templates.html",
+    "test-download": "Abra tests/teste-download-docx.html"
+  },
+  "structure": {
+    "src/": "Código fonte principal",
+    "src/core/": "Módulos JavaScript",
+    "src/styles/": "Folhas de estilo CSS",
+    "tests/": "Arquivos de teste e diagnóstico",
+    "docs/": "Documentação completa",
+    "templates/": "Templates de exemplo DOCX",
+    "examples/": "Arquivos de exemplo e referência",
+    "libs/": "Bibliotecas locais (opcional)"
+  },
+  "dependencies": {
+    "jspdf": "2.5.1",
+    "docx": "7.8.2"
+  },
+  "features": [
+    "Geração automática de contratos",
+    "Sistema de templates DOCX personalizáveis",
+    "Cálculo automático de valores financeiros",
+    "Exportação PDF/DOCX/JSON",
+    "Interface responsiva mobile/desktop",
+    "Validação inteligente de dados",
+    "Sistema de testes automatizado"
+  ],
+  "compatibility": {
+    "browsers": ["Chrome 90+", "Firefox 88+", "Safari 14+", "Edge 90+"],
+    "mobile": ["iOS Safari 14+", "Chrome Mobile 90+", "Samsung Internet 13+"]
+  },
+  "files": {
+    "main": "index.html",
+    "offline": "index-offline.html",
+    "readme": "README.md",
+    "core": [
+      "src/core/utils.js",
+      "src/core/calculations.js", 
+      "src/core/exports.js",
+      "src/core/main.js"
+    ],
+    "styles": ["src/styles/styles.css"],
+    "tests": [
+      "tests/teste-final-sistema.html",
+      "tests/teste-templates.html",
+      "tests/teste-download-docx.html"
+    ],
+    "docs": [
+      "docs/GUIA_COMPLETO.md",
+      "docs/MOBILE_GUIDE.md", 
+      "docs/PUBLICACAO_ONLINE.md"
+    ]
+  },
+  "author": "Sistema Gerador de Contratos",
+  "license": "Uso Interno",
+  "created": "2025-10-02",
+  "updated": "2025-10-02"
+}

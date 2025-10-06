@@ -1,0 +1,330 @@
+/* ==========================================================================
+   GERADOR DE CONTRATOS - ESTILOS PRINCIPAIS
+   ========================================================================== */
+
+:root {
+  --bg: #0b1020;         /* fundo escuro elegante */
+  --card: #121938;       /* cartão */
+  --muted: #7f8db9;      /* texto suave */
+  --text: #e8ecff;       /* texto principal */
+  --pri: #5b9dff;        /* primária */
+  --pri-2: #3f7fe0;      /* hover */
+  --ok: #22c55e;         /* sucesso */
+  --warn: #eab308;       /* aviso */
+  --err: #ef4444;        /* erro */
+  --border: #2a3569;     /* borda */
+}
+
+/* ==========================================================================
+   RESET E BASE
+   ========================================================================== */
+
+* { 
+  box-sizing: border-box; 
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial; 
+}
+
+body { 
+  margin: 0; 
+  background: radial-gradient(1200px 600px at 20% 0%, #15224b, transparent), var(--bg); 
+  color: var(--text); 
+}
+
+/* ==========================================================================
+   LAYOUT PRINCIPAL
+   ========================================================================== */
+
+header { 
+  padding: 24px 16px; 
+}
+
+h1 { 
+  margin: 0 0 6px; 
+  font-size: 28px; 
+  letter-spacing: .3px; 
+}
+
+.sub { 
+  color: var(--muted); 
+  font-size: 14px; 
+}
+
+main { 
+  max-width: 1100px; 
+  margin: 0 auto; 
+  padding: 16px; 
+}
+
+footer { 
+  color: var(--muted); 
+  text-align: center; 
+  font-size: 12px; 
+  padding: 18px; 
+}
+
+/* ==========================================================================
+   SISTEMA DE GRID
+   ========================================================================== */
+
+.grid { 
+  display: grid; 
+  gap: 14px; 
+}
+
+.grid.cols-2 { 
+  grid-template-columns: repeat(2, 1fr); 
+}
+
+.grid.cols-3 { 
+  grid-template-columns: repeat(3, 1fr); 
+}
+
+.grid.cols-4 { 
+  grid-template-columns: repeat(4, 1fr); 
+}
+
+/* ==========================================================================
+   CARTÕES E COMPONENTES
+   ========================================================================== */
+
+.card { 
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); 
+  border: 1px solid var(--border); 
+  border-radius: 14px; 
+  padding: 16px; 
+  box-shadow: 0 10px 30px rgba(0,0,0,.15); 
+}
+
+.card h2 { 
+  margin: 0 0 10px; 
+  font-size: 18px; 
+  font-weight: 700; 
+  letter-spacing: .2px; 
+}
+
+/* ==========================================================================
+   FORMULÁRIOS E INPUTS
+   ========================================================================== */
+
+label { 
+  font-size: 13px; 
+  color: var(--muted); 
+  display: block; 
+  margin: 4px 0; 
+}
+
+input, select, button, textarea { 
+  width: 100%; 
+  padding: 10px 12px; 
+  border-radius: 10px; 
+  border: 1px solid var(--border); 
+  background: #0f1632; 
+  color: var(--text); 
+  outline: none; 
+}
+
+input:focus, 
+select:focus, 
+textarea:focus { 
+  border-color: var(--pri); 
+  box-shadow: 0 0 0 3px rgba(91,157,255,.15); 
+}
+
+.error { 
+  border-color: var(--err) !important; 
+}
+
+/* Estados de validação em tempo real */
+input.valid,
+select.valid,
+textarea.valid {
+  border-color: var(--ok) !important;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+input.invalid,
+select.invalid, 
+textarea.invalid {
+  border-color: var(--err) !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+/* Indicador de campo obrigatório */
+label.required::after {
+  content: " *";
+  color: var(--err);
+  font-weight: bold;
+}
+
+/* Tooltip de validação */
+.validation-tooltip {
+  position: absolute;
+  bottom: -25px;
+  left: 0;
+  background: var(--err);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.validation-tooltip.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.validation-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 10px;
+  border: 4px solid transparent;
+  border-bottom-color: var(--err);
+}
+
+/* ==========================================================================
+   ELEMENTOS AUXILIARES
+   ========================================================================== */
+
+.row { 
+  display: grid; 
+  grid-template-columns: 140px 1fr; 
+  align-items: center; 
+  gap: 8px; 
+}
+
+.row > label { 
+  margin: 0; 
+}
+
+.inline { 
+  display: flex; 
+  gap: 8px; 
+  align-items: center; 
+}
+
+.hint { 
+  font-size: 12px; 
+  color: var(--muted); 
+}
+
+.pill { 
+  padding: 2px 8px; 
+  border-radius: 999px; 
+  border: 1px solid var(--border); 
+  color: var(--muted); 
+  font-size: 12px; 
+}
+
+/* ==========================================================================
+   BOTÕES E AÇÕES
+   ========================================================================== */
+
+.actions { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 10px; 
+  justify-content: flex-end; 
+}
+
+.btn { 
+  width: auto; 
+  cursor: pointer; 
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.btn.primary { 
+  background: linear-gradient(180deg, var(--pri), var(--pri-2)); 
+  color: white; 
+}
+
+.btn.ok { 
+  background: linear-gradient(180deg, #2cd074, #1db75f); 
+  color: white; 
+}
+
+.btn.warn { 
+  background: linear-gradient(180deg, #facc15, #eab308); 
+  color: #1f2937; 
+}
+
+.btn.ghost { 
+  background: transparent; 
+  border: 1px dashed var(--border); 
+  color: var(--muted); 
+}
+
+.btn.docx {
+  background: linear-gradient(180deg, #059669, #047857);
+  color: white;
+}
+
+/* ==========================================================================
+   RESPONSIVIDADE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .grid.cols-2,
+  .grid.cols-3,
+  .grid.cols-4 {
+    grid-template-columns: 1fr;
+  }
+  
+  .actions {
+    justify-content: stretch;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+  
+  main {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  header {
+    padding: 16px 8px;
+  }
+  
+  h1 {
+    font-size: 24px;
+  }
+  
+  .card {
+    padding: 12px;
+  }
+}
+
+/* ==========================================================================
+   ANIMAÇÕES E TRANSIÇÕES
+   ========================================================================== */
+
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 40px rgba(0,0,0,.2);
+}
+
+input, select, textarea {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pill {
+  transition: background-color 0.2s ease;
+}
