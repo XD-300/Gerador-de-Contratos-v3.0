@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Completo das Automações - Gerador de Contratos</title>
+    <link rel="stylesheet" href="src/styles/styles.css">
+    <link rel="stylesheet" href="src/styles/validations.css">
+    <style>
+        .test-section {
+            background: #f8fafc;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        .test-button {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .test-result {
+            background: #f0f9ff;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .status-ok { color: #22c55e; }
+        .status-error { color: #ef4444; }
+        .status-warning { color: #f59e0b; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🧪 Teste Completo das Automações</h1>
+        <div class="sub">Sistema de diagnóstico e verificação de todas as automações implementadas</div>
+    </header>
+
+    <main>
+        <div class="test-section">
+            <h2>📊 Status do Sistema</h2>
+            <div id="systemStatus"></div>
+            <button class="test-button" onclick="runSystemDiagnostic()">🔍 Executar Diagnóstico</button>
+        </div>
+
+        <div class="test-section">
+            <h2>🧮 Teste de Cálculo Automático</h2>
+            <div class="grid cols-4">
+                <div>
+                    <label>Forma de Pagamento</label>
+                    <select id="forma">
+                        <option value="À vista">À vista</option>
+                        <option value="Cartão">Cartão de Crédito</option>
+                        <option value="Boleto">Boleto Bancário</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Valor Total</label>
+                    <input id="total" placeholder="R$ 0,00" />
+                </div>
+                <div>
+                    <label>Número de Parcelas</label>
+                    <input id="nParcelas" placeholder="12" />
+                </div>
+                <div>
+                    <label>Valor da Parcela</label>
+                    <input id="parcela" placeholder="R$ 0,00" />
+                </div>
+                <div>
+                    <label>Valor À Vista</label>
+                    <input id="avista" placeholder="R$ 0,00" />
+                </div>
+                <div>
+                    <label>Valor de Entrada</label>
+                    <input id="entrada" placeholder="R$ 0,00" />
+                </div>
+                <div>
+                    <label>Desconto</label>
+                    <input id="desconto" placeholder="R$ 0,00" />
+                </div>
+                <div>
+                    <label>Dia Vencimento</label>
+                    <input id="diaVenc" placeholder="5" />
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <input type="checkbox" id="auto" checked /> Cálculo Automático Ativo
+                <button class="test-button" onclick="testCalculations()">🧮 Testar Cálculos</button>
+            </div>
+            <div id="calcResults" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>✅ Teste de Validação Automática</h2>
+            <div class="grid cols-3">
+                <div>
+                    <label>CPF Responsável</label>
+                    <input id="cpfResp" placeholder="000.000.000-00" />
+                </div>
+                <div>
+                    <label>Data de Nascimento</label>
+                    <input id="nascResp" placeholder="DD/MM/AAAA" />
+                </div>
+                <div>
+                    <label>Email (opcional)</label>
+                    <input id="email" placeholder="exemplo@email.com" />
+                </div>
+            </div>
+            <button class="test-button" onclick="testValidations()">✅ Testar Validações</button>
+            <div id="validationResults" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Teste de Valores Padrão</h2>
+            <div class="grid cols-3">
+                <div>
+                    <label>Número do Contrato</label>
+                    <input id="contrato" readonly />
+                </div>
+                <div>
+                    <label>Data Atual</label>
+                    <input id="data" readonly />
+                </div>
+                <div>
+                    <label>Modelo Selecionado</label>
+                    <select id="modelo">
+                        <option value="">Selecionar...</option>
+                        <option value="Contrato_EJA">Contrato EJA</option>
+                        <option value="Contrato_TEC">Contrato Técnico</option>
+                    </select>
+                </div>
+            </div>
+            <button class="test-button" onclick="testDefaults()">🎯 Aplicar Padrões</button>
+            <div id="defaultsResults" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>💾 Teste de Salvamento Automático</h2>
+            <p>Digite algo nos campos acima e aguarde 2 segundos. Os dados serão salvos automaticamente.</p>
+            <button class="test-button" onclick="checkAutoSave()">💾 Verificar Dados Salvos</button>
+            <button class="test-button" onclick="clearAutoSave()">🗑️ Limpar Dados Salvos</button>
+            <div id="saveResults" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📈 Log de Atividades</h2>
+            <div id="activityLog" class="test-result" style="height: 200px; overflow-y: auto;"></div>
+            <button class="test-button" onclick="clearLog()">🗑️ Limpar Log</button>
+        </div>
+    </main>
+
+    <!-- Scripts necessários -->
+    <script src="src/auto-calc/engine.js"></script>
+    <script src="src/auto-calc/init.js"></script>
+    <script src="src/core/advanced-automations.js"></script>
+
+    <script>
+        let logContainer;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            logContainer = document.getElementById('activityLog');
+            log('🚀 Sistema de testes inicializado');
+            
+            // Simular carregamento de bibliotecas
+            setTimeout(() => {
+                window.AutomaticCalculations = AutomaticCalculations || {};
+                window.SystemAutomations = SystemAutomations || {};
+                log('✅ Automações carregadas');
+            }, 500);
+        });
+
+        function log(message) {
+            if (logContainer) {
+                const timestamp = new Date().toLocaleTimeString();
+                logContainer.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+            console.log(message);
+        }
+
+        function runSystemDiagnostic() {
+            const statusDiv = document.getElementById('systemStatus');
+            let html = '<h3>Diagnóstico do Sistema:</h3>';
+            
+            // Verificar dependências
+            html += '<h4>📦 Dependências:</h4>';
+            html += `<div>AutomaticCalculations: ${typeof AutomaticCalculations !== 'undefined' ? '<span class="status-ok">✅ OK</span>' : '<span class="status-error">❌ FALHOU</span>'}</div>`;
+            html += `<div>SystemAutomations: ${typeof SystemAutomations !== 'undefined' ? '<span class="status-ok">✅ OK</span>' : '<span class="status-error">❌ FALHOU</span>'}</div>`;
+            
+            // Verificar elementos DOM
+            html += '<h4>🎯 Elementos DOM:</h4>';
+            ['forma', 'total', 'parcela', 'nParcelas', 'avista', 'entrada'].forEach(id => {
+                const exists = document.getElementById(id) !== null;
+                html += `<div>#${id}: ${exists ? '<span class="status-ok">✅ OK</span>' : '<span class="status-error">❌ FALHOU</span>'}</div>`;
+            });
+            
+            statusDiv.innerHTML = html;
+            log('🔍 Diagnóstico do sistema executado');
+        }
+
+        function testCalculations() {
+            const resultsDiv = document.getElementById('calcResults');
+            resultsDiv.innerHTML = '<h4>Resultados dos Testes de Cálculo:</h4>';
+            
+            // Teste 1: Cartão de crédito
+            log('🧮 Testando cálculo para cartão de crédito...');
+            document.getElementById('forma').value = 'Cartão';
+            document.getElementById('total').value = 'R$ 1.200,00';
+            document.getElementById('nParcelas').value = '12';
+            document.getElementById('parcela').value = '';
+            
+            if (typeof AutomaticCalculations !== 'undefined') {
+                AutomaticCalculations.calculate();
+                const parcela = document.getElementById('parcela').value;
+                resultsDiv.innerHTML += `<div>Teste Cartão: ${parcela ? '<span class="status-ok">✅ ' + parcela + '</span>' : '<span class="status-error">❌ Falhou</span>'}</div>`;
+            }
+            
+            // Teste 2: À vista
+            setTimeout(() => {
+                log('💰 Testando cálculo à vista...');
+                document.getElementById('forma').value = 'À vista';
+                document.getElementById('total').value = 'R$ 1.000,00';
+                document.getElementById('avista').value = '';
+                
+                if (typeof AutomaticCalculations !== 'undefined') {
+                    AutomaticCalculations.calculate();
+                    const avista = document.getElementById('avista').value;
+                    resultsDiv.innerHTML += `<div>Teste À Vista: ${avista ? '<span class="status-ok">✅ ' + avista + '</span>' : '<span class="status-error">❌ Falhou</span>'}</div>`;
+                }
+            }, 1000);
+        }
+
+        function testValidations() {
+            const resultsDiv = document.getElementById('validationResults');
+            resultsDiv.innerHTML = '<h4>Resultados dos Testes de Validação:</h4>';
+            
+            // Testar CPF válido
+            const cpfField = document.getElementById('cpfResp');
+            cpfField.value = '123.456.789-09'; // CPF inválido para teste
+            cpfField.dispatchEvent(new Event('blur'));
+            
+            setTimeout(() => {
+                const hasError = cpfField.classList.contains('invalid');
+                resultsDiv.innerHTML += `<div>Validação CPF: ${hasError ? '<span class="status-ok">✅ Detectou CPF inválido</span>' : '<span class="status-warning">⚠️ Não validou</span>'}</div>`;
+            }, 100);
+            
+            // Testar email
+            const emailField = document.getElementById('email');
+            emailField.value = 'email-invalido';
+            emailField.dispatchEvent(new Event('blur'));
+            
+            setTimeout(() => {
+                const hasError = emailField.classList.contains('invalid');
+                resultsDiv.innerHTML += `<div>Validação Email: ${hasError ? '<span class="status-ok">✅ Detectou email inválido</span>' : '<span class="status-warning">⚠️ Não validou</span>'}</div>`;
+            }, 200);
+            
+            log('✅ Testes de validação executados');
+        }
+
+        function testDefaults() {
+            const resultsDiv = document.getElementById('defaultsResults');
+            
+            // Aplicar valores padrão
+            if (typeof SystemAutomations !== 'undefined' && SystemAutomations.setupSmartDefaults) {
+                SystemAutomations.setupSmartDefaults();
+            }
+            
+            // Verificar se foram aplicados
+            const contrato = document.getElementById('contrato').value;
+            const data = document.getElementById('data').value;
+            const modelo = document.getElementById('modelo').value;
+            
+            resultsDiv.innerHTML = `
+                <h4>Valores Padrão Aplicados:</h4>
+                <div>Contrato: ${contrato || '<span class="status-error">❌ Não gerado</span>'}</div>
+                <div>Data: ${data || '<span class="status-error">❌ Não preenchida</span>'}</div>
+                <div>Modelo: ${modelo || '<span class="status-warning">⚠️ Não selecionado</span>'}</div>
+            `;
+            
+            log('🎯 Valores padrão testados');
+        }
+
+        function checkAutoSave() {
+            const saved = localStorage.getItem('gerador_contratos_backup');
+            const resultsDiv = document.getElementById('saveResults');
+            
+            if (saved) {
+                const data = JSON.parse(saved);
+                const keys = Object.keys(data).length;
+                resultsDiv.innerHTML = `<h4>Dados Salvos Automaticamente:</h4><div><span class="status-ok">✅ ${keys} campos salvos</span></div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } else {
+                resultsDiv.innerHTML = '<div><span class="status-warning">⚠️ Nenhum dado salvo encontrado</span></div>';
+            }
+            
+            log('💾 Verificação de salvamento automático');
+        }
+
+        function clearAutoSave() {
+            localStorage.removeItem('gerador_contratos_backup');
+            document.getElementById('saveResults').innerHTML = '<div><span class="status-ok">✅ Dados salvos limpos</span></div>';
+            log('🗑️ Dados de salvamento automático limpos');
+        }
+
+        function clearLog() {
+            logContainer.innerHTML = '';
+            log('🗑️ Log de atividades limpo');
+        }
+
+        // Interceptar console.log para mostrar no log de atividades
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            if (logContainer && args[0] && typeof args[0] === 'string') {
+                const message = args.join(' ');
+                if (message.includes('✅') || message.includes('❌') || message.includes('🔄') || message.includes('💰')) {
+                    log(message);
+                }
+            }
+        };
+    </script>
+</body>
+</html>
