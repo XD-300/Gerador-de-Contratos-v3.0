@@ -125,6 +125,18 @@
   opacity: 1;
 }
 
+/* Correção visual para botão Exemplo (mantém pequeno e ghost) */
+#btnExemplo.btn.ghost {
+  width: auto !important;
+  min-width: unset !important;
+  padding: 6px 10px !important;
+  font-size: 11px !important;
+  border-radius: 8px !important;
+  color: var(--muted) !important;
+  border: 1px dashed var(--border) !important;
+  background: transparent !important;
+}
+
 /* Responsividade para telas menores */
 @media (max-width: 768px) {
   .auto-calc-active::after {

@@ -1,159 +1,70 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <!-- FAVICON CORE -->
+
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- ANDROID / CHROME -->
+  <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192-convertido-de-jpg.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512-convertido-de-jpg.png">
+
+  <!-- APPLE / IOS -->
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <!-- PWA (opcional, mas recomendado) -->
+  <link rel="manifest" href="site.webmanifest">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Gerador de Contratos (Web)</title>
   
+  <!-- Bibliotecas locais (prioridade) -->
+  <script src="src/export/libs/pizzip.min.js"></script>
+  <script src="src/export/libs/docxtemplater.js"></script>
+
   <!-- Folha de estilos -->
   <link rel="stylesheet" href="src/styles/main.css">
+  <style>#sec-templates { display: none !important; }</style>
+  <link rel="stylesheet" href="src/styles/auto-calc.css">
   <link rel="stylesheet" href="src/styles/validations.css">
-  <link rel="stylesheet" href="src/auto-calc/styles.css">
+
+  <!-- Modal de relatório técnico do download DOCX -->
+  <style>
+    /* Modal de relatório */
+    #relatorio-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 9999; }
+    #relatorio-modal.show { display: flex; }
+    #relatorio-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
+    #relatorio-card {
+      position: relative; width: min(820px, 92vw); max-height: 80vh; overflow: hidden;
+      background: #0f172a; color: #e2e8f0; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.4);
+      border: 1px solid rgba(148,163,184,.25);
+    }
+    #relatorio-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid rgba(148,163,184,.25); }
+    #relatorio-title { font-weight: 700; font-size: 16px; }
+    #relatorio-body { padding: 0; }
+    #relatorio-pre {
+      margin: 0; padding: 14px 16px; white-space: pre-wrap; overflow: auto; max-height: calc(80vh - 100px);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12.5px; line-height: 1.45;
+      background: #0b1220;
+    }
+    #relatorio-actions { display:flex; gap: 8px; padding: 12px 16px; border-top: 1px solid rgba(148,163,184,.25); justify-content: flex-end;}
+    .btn-rel { background: #334155; border: 1px solid rgba(148,163,184,.25); color: #e2e8f0; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+    .btn-rel.primary { background: linear-gradient(180deg,#3b82f6,#2563eb); border: none; }
+  </style>
   
-  <!-- Bibliotecas externas -->
-  <script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"></script>
-  
-  <!-- Carregamento sequencial das bibliotecas de template com múltiplos fallbacks -->
+  <!-- Carregamento LOCAL-FIRST das bibliotecas de template com fallbacks -->
   <script>
-    // Função para carregar scripts sequencialmente com fallback
-    function loadScriptSequentially(srcArray) {
-      return new Promise((resolve, reject) => {
-        let currentIndex = 0;
-        
-        function tryLoad() {
-          if (currentIndex >= srcArray.length) {
-            reject(new Error('Todas as URLs falharam'));
-            return;
-          }
-          
-          const script = document.createElement('script');
-          script.src = srcArray[currentIndex];
-          
-          script.onload = () => {
-            console.log(`✅ Carregado: ${srcArray[currentIndex]}`);
-            resolve();
-          };
-          
-          script.onerror = () => {
-            console.warn(`❌ Falhou: ${srcArray[currentIndex]}`);
-            currentIndex++;
-            document.head.removeChild(script);
-            tryLoad();
-          };
-          
-          document.head.appendChild(script);
-        }
-        
-        tryLoad();
-      });
-    }
-
-    // Carrega bibliotecas na ordem correta com múltiplos CDNs
-    async function loadTemplateLibraries() {
-      try {
-        console.log('📦 Carregando PizZip...');
-        await loadScriptSequentially([
-          'https://unpkg.com/pizzip@3.1.7/dist/pizzip.min.js',
-          'https://cdn.jsdelivr.net/npm/pizzip@3.1.7/dist/pizzip.min.js',
-          'https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.7/pizzip.min.js'
-        ]);
-        
-        console.log('📦 Carregando Docxtemplater...');
-        await loadScriptSequentially([
-          'https://unpkg.com/docxtemplater@3.44.0/build/docxtemplater.js',
-          'https://cdn.jsdelivr.net/npm/docxtemplater@3.44.0/build/docxtemplater.js'
-        ]);
-
-        // 🔗 ALIAS ESSENCIAL: algumas builds expõem window.docxtemplater (minúsculo)
-        if (window.docxtemplater && !window.Docxtemplater) {
-          window.Docxtemplater = window.docxtemplater;
-        }
-        
-        console.log('✅ Bibliotecas de template carregadas com sucesso!');
-        
-        // Marca as bibliotecas como prontas
-        window.templateLibrariesReady = !!(window.PizZip && (window.Docxtemplater || window.docxtemplater));
-        
-        // Dispara evento customizado
-        window.dispatchEvent(new Event('templateLibrariesLoaded'));
-        
-      } catch (error) {
-        console.error('❌ Erro ao carregar bibliotecas via CDN:', error);
-        console.log('🔄 Tentando carregamento alternativo...');
-        
-        // Fallback: tentar carregamento via import dinâmico
-        try {
-          await ensureFallbackLibraries();
-        } catch (fallbackError) {
-          console.error('❌ Falha em todos os métodos de carregamento:', fallbackError);
-          window.templateLibrariesReady = false;
-        }
-      }
-    }
-
-    // Sistema de fallback com import dinâmico
-    async function ensureFallbackLibraries() {
-      console.log('🔄 Tentando carregar via import dinâmico...');
-      
-      try {
-        // Fallback para PizZip
-        if (!window.PizZip) {
-          const PizZipModule = await import('https://unpkg.com/pizzip@3.1.7/dist/pizzip.js');
-          window.PizZip = PizZipModule.default || PizZipModule;
-        }
-        
-        // Fallback para Docxtemplater
-        if (!window.Docxtemplater) {
-          try {
-            const m = await import('https://unpkg.com/docxtemplater@3.44.0/build/docxtemplater.js');
-            window.Docxtemplater = window.Docxtemplater || window.docxtemplater || m.default || m;
-          } catch(e) { /* ignora; script tag já cobre */ }
-        }
-
-        // 🔗 ALIAS ESSENCIAL: algumas builds expõem window.docxtemplater (minúsculo)
-        if (window.docxtemplater && !window.Docxtemplater) {
-          window.Docxtemplater = window.docxtemplater;
-        }
-        
-        console.log('✅ Bibliotecas carregadas via fallback!');
-        window.templateLibrariesReady = !!(window.PizZip && (window.Docxtemplater || window.docxtemplater));
-        window.dispatchEvent(new Event('templateLibrariesLoaded'));
-        
-      } catch (error) {
-        console.error('❌ Erro no carregamento de fallback:', error);
-        throw error;
-      }
-    }
-
-    // Inicia carregamento quando DOM estiver pronto
-    document.addEventListener('DOMContentLoaded', function() {
-      loadTemplateLibraries();
-      
-      // Verificação periódica das bibliotecas
-      let checkCount = 0;
-      const maxChecks = 10;
-      
-      const checkLibraries = () => {
-        checkCount++;
-        console.log(`🔍 Verificação ${checkCount}/${maxChecks} - Status das bibliotecas:`);
-        console.log('docx:', typeof window.docx !== 'undefined' ? '✅' : '❌');
-        console.log('PizZip:', typeof window.PizZip !== 'undefined' ? '✅' : '❌');
-        console.log('Docxtemplater:', typeof (window.Docxtemplater || window.docxtemplater) !== 'undefined' ? '✅' : '❌');
-        console.log('Template Ready:', (window.PizZip && (window.Docxtemplater || window.docxtemplater)) ? '✅' : '❌');
-        
-        // Se as bibliotecas essenciais não estão carregadas e ainda há tentativas
-        if ((!window.PizZip || !(window.Docxtemplater || window.docxtemplater)) && checkCount < maxChecks) {
-          console.log(`🔄 Bibliotecas não carregadas, tentativa ${checkCount + 1} em 2 segundos...`);
-          setTimeout(checkLibraries, 2000);
-        } else if (!window.PizZip || !(window.Docxtemplater || window.docxtemplater)) {
-          console.error('❌ Falha crítica: Bibliotecas de template não carregaram após todas as tentativas');
-        } else {
-          console.log('✅ Todas as bibliotecas estão prontas!');
-        }
-      };
-      
-      // Primeira verificação após 2 segundos
-      setTimeout(checkLibraries, 2000);
+    // ...existing code...
+    document.addEventListener('DOMContentLoaded', () => {
+      // diagnóstico leve por ~10s
+      let tries = 0, max = 20;
+      const t = setInterval(() => {
+        const ok = !!(window.PizZip && (window.Docxtemplater || window.docxtemplater));
+  console.log('🔍 PizZip:', !!window.PizZip, '| Docxtemplater:', !!(window.Docxtemplater || window.docxtemplater));
+        if (ok || ++tries >= max) clearInterval(t);
+      }, 500);
     });
   </script>
 
@@ -161,6 +72,8 @@
   <script>
     // Salva e restaura as preferências do usuário
     document.addEventListener('DOMContentLoaded', function() {
+        // Remove a preferência de forma de pagamento do localStorage
+        localStorage.removeItem('gerador_forma_pagamento');
       // Elementos que serão persistidos
       const modeloSelect = document.getElementById('modelo');
       const formaSelect = document.getElementById('forma');
@@ -183,22 +96,26 @@
       // Restaura valores salvos ao carregar a página
       function restaurarPreferencias() {
         const modeloSalvo = localStorage.getItem('gerador_modelo_contrato');
-        const formaSalva = localStorage.getItem('gerador_forma_pagamento');
-        
+        let formaSalva = localStorage.getItem('gerador_forma_pagamento');
+
         if (modeloSalvo && modeloSelect) {
           modeloSelect.value = modeloSalvo;
           console.log('🔄 Modelo restaurado:', modeloSalvo);
         }
-        
+
         if (formaSalva && formaSelect) {
-          formaSelect.value = formaSalva;
-          console.log('🔄 Forma de pagamento restaurada:', formaSalva);
-          
-          // Dispara evento change para atualizar campos condicionais
+          const f = formaSalva.toLowerCase();
+
+          if (f === 'boleto') formaSelect.value = 'Boleto';
+          else if (f === 'cartão' || f === 'cartao') formaSelect.value = 'Cartão';
+          else if (f === 'à vista' || f === 'avista' || f === 'a vista') formaSelect.value = 'À vista';
+          else formaSelect.value = formaSalva; // caso já esteja certinho
+
+          console.log('🔄 Forma de pagamento restaurada (normalizada):', formaSelect.value);
+
           formaSelect.dispatchEvent(new Event('change'));
         }
-        
-        // Preenche a data atual sempre que a página carregar
+
         preencherDataAtual();
       }
       
@@ -223,46 +140,198 @@
     });
   </script>
 
-  <!-- Sistema de Cálculo Automático (ordem importante) -->
+  <!-- Ordem de carregamento dos módulos (atualizada) -->
+  <script src="src/app/utils.js"></script>
+  <script src="src/app/mapping/placeholders-map.js"></script>
+  <script src="src/app/automations.js"></script>
+  <script src="src/app/relatorio.js"></script>
+  <script src="src/app/validations/validacao_exemplo.js"></script>
+  <script src="src/app/validations/validacao_cidadeUf.js"></script>
+  <script src="src/app/main.js"></script>
   <script src="src/auto-calc/engine.js"></script>
   <script src="src/auto-calc/init.js"></script>
-  
-  <!-- Módulos JavaScript da aplicação -->
-  <script src="src/core/exports.js"></script>
-  <script src="src/core/python-examples.js"></script>
-  <script src="src/core/automations.js"></script>
-  <script src="src/core/main.js"></script>
+
+  <!-- libs de exportação -->
+  <script src="src/export/exports.js"></script>
+  <script src="libs/xlsx.full.min.js"></script>
+
+  <!-- Debug listener para eventos DOCX -->
+  <script>
+    // Listener de debug para eventos DOCX
+    window.addEventListener('docx:downloaded', e => console.log('[EV] docx:downloaded:', e.detail));
+    window.addEventListener('docx:generated', e => console.log('[EV] docx:generated:', e.detail));
+    window.addEventListener('gerarDocx', e => console.log('[EV] gerarDocx:', e.detail));
+  </script>
+
+  <!-- Reporter do Fluxo de Exportação DOCX – não altera o fluxo, só registra -->
+  <script>
+  (function () {
+    console.log('[Relatorio] Snippet passivo carregado e ativo!');
+    let R = null;
+
+    // 1) Clique no botão: início do relatório (até antes do dispatch)
+    document.addEventListener('DOMContentLoaded', function () {
+      const btn = document.getElementById('btnDocx');
+      if (!btn) return;
+
+      btn.addEventListener('click', () => {
+        // (Re)começa um relatório novo a cada clique
+        R = Relatorio.create('Fluxo de Exportação DOCX')
+          .env(() => ({
+            pizzip: !!window.PizZip,
+            docxtemplater: !!(window.Docxtemplater || window.docxtemplater),
+            docx: !!(window.docx && window.docx.Packer && window.docx.Document)
+          }))
+          .ok('1) Usuário clicou em 📝 Gerar DOCX (#btnDocx)')
+          .ok('2) Salvamento no histórico será executado pelo handler do botão')
+          .check('DOM pronto', ['interactive','complete'].includes(document.readyState), document.readyState)
+          .check('Bibliotecas: docx', !!(window.docx && window.docx.Packer && window.docx.Document))
+          .check('Bibliotecas: PizZip+Docxtemplater', !!(window.PizZip && (window.Docxtemplater || window.docxtemplater)));
+      }, { capture: true }); // captura para logar antes de outros listeners
+    });
+
+    // 2) Evento customizado: quando o fluxo real dispara 'gerarDocx'
+    window.addEventListener('gerarDocx', () => {
+      if (!R) return;
+      R.ok("3) Evento customizado disparado: window.dispatchEvent(new CustomEvent('gerarDocx'))");
+
+      // Coleta dos campos (espelha seu formulário atual)
+      const get = (id) => document.getElementById(id)?.value || '';
+      const dados = {
+        modelo: get('modelo'),
+        forma: get('forma'),
+        dataContrato: get('data'),
+        responsavel: get('nomeResp'),
+        aluno: get('nomeAluno'),
+        curso: get('curso'),
+        valorTotal: get('total'),
+        templateSelecionado: document.getElementById('templateUpload')?.files?.[0]?.name || '(nenhum)'
+      };
+      R.attach('4) Campos coletados do formulário', dados);
+
+      // Template selecionado e libs
+      const temTemplate = !!document.getElementById('templateUpload')?.files?.length;
+      R.check('Template selecionado', temTemplate, dados.templateSelecionado);
+
+      // Observação do próximo passo (executado nos módulos de exportação)
+      R.ok('5) Módulo de exportação irá: selecionar template, preencher placeholders, gerar DOCX (Docxtemplater/PizZip) e ofertar download');
+    });
+
+    // 3) (Opcional) Se o seu módulo de exportação emitir estes eventos, registramos também:
+    //    window.dispatchEvent(new CustomEvent('docx:generated', {detail:{filename, size}}))
+    //    window.dispatchEvent(new CustomEvent('docx:downloaded', {detail:{filename}}))
+    window.addEventListener('docx:generated', (e) => {
+      if (!R) return;
+      const { filename, size } = e.detail || {};
+      if (size != null) R.metric('Tamanho do DOCX', size, 'bytes');
+      R.ok(`6) DOCX gerado: ${filename || '(sem nome)'}`);
+    });
+    window.addEventListener('docx:downloaded', (e) => {
+  if (!R) return;
+  const { filename } = e.detail || {};
+  R.ok(`7) Download oferecido ao usuário: ${filename || '(sem nome)'}`);
+  R.end('concluido').toConsole();
+  // Popup é gerenciado pelo sistema auto-contido no final do HTML
+  // Se quiser também salvar arquivo do relatório:
+  // R.downloadTXT('relatorio_exportacao.txt');
+    });
+
+    // 4) Timeout de segurança: encerra o relatório mesmo sem eventos opcionais
+    window.addEventListener('gerarDocx', () => {
+      if (!R) return;
+      setTimeout(() => { if (R && !R.result) R.end('concluido').toConsole(); }, 3000);
+    });
+  })();
+  </script>
+
+  <script>
+  // Integração: sempre que clicar no botão Gerar DOCX, executa diagnóstico e alerta
+  document.addEventListener('DOMContentLoaded', function() {
+    var btnDocx = document.getElementById('btnDocx');
+    if (btnDocx) {
+      btnDocx.addEventListener('click', async function(e) {
+        // Diagnóstico completo
+        const R = Relatorio.create('Diagnóstico de Exportação DOCX')
+          .env(() => ({
+            pizzip: !!window.PizZip,
+            docxtemplater: !!(window.Docxtemplater || window.docxtemplater),
+            docx: !!(window.docx && window.docx.Packer && window.docx.Document)
+          }));
+
+        // Checks de pré-voo
+        R.check('DOM pronto', document.readyState === 'interactive' || document.readyState === 'complete', document.readyState);
+        R.check('docx disponível', !!(window.docx && window.docx.Packer && window.docx.Document));
+
+
+  // Coleta campos principais e detalhes
+  const modelo = document.getElementById('modelo')?.value || '';
+  const forma = document.getElementById('forma')?.value || '';
+  const dataContrato = document.getElementById('data')?.value || '';
+  const nomeResp = document.getElementById('nomeResp')?.value || '';
+  const nomeAluno = document.getElementById('nomeAluno')?.value || '';
+  const curso = document.getElementById('curso')?.value || '';
+  const total = document.getElementById('total')?.value || '';
+  const template = document.getElementById('templateNome')?.textContent || '-';
+  R.attach('Campos coletados', { modelo, forma, dataContrato, nomeResp, nomeAluno, curso, total, template });
+
+        // Validação básica
+  let erros = [];
+  if (!(nomeResp || nomeAluno)) erros.push('Nome do responsável/aluno ausente');
+        if (!curso) erros.push('Curso ausente');
+        if (!total) erros.push('Valor total ausente');
+        if (!window.docx || !window.docx.Packer) erros.push('Biblioteca docx não carregada');
+
+        // Exemplo de etapa de geração (não gera arquivo real aqui)
+        try {
+          await R.run('validacao', async () => {
+            if (erros.length) throw new Error(erros.join('; '));
+          });
+          R.ok('Pronto para exportar.');
+        } catch (e) {
+          R.error(e);
+        }
+
+        R.end(erros.length ? 'falhou' : 'concluido');
+
+        // Gera mensagem de alerta com resumo e detalhes
+        let msg = `Relatório de Exportação:\n`;
+        msg += `Modelo: ${modelo}\nForma: ${forma}\nData: ${dataContrato}\n`;
+        msg += `Responsável: ${nomeResp}\nAluno: ${nomeAluno}\nCurso: ${curso}\nValor total: ${total}\n`;
+        msg += `Template: ${template}\n`;
+        msg += `Libs: docx=${!!window.docx}, PizZip=${!!window.PizZip}, Docxtemplater=${!!(window.Docxtemplater||window.docxtemplater)}, TemplateReady=${!!window.templateLibrariesReady}\n`;
+        if (erros.length) {
+          msg += '\n⚠️ Problemas encontrados:\n- ' + erros.join('\n- ');
+        } else {
+          msg += '\n✅ Tudo pronto para exportação!';
+        }
+        alert(msg);
+        // Opcional: imprime no console
+        R.toConsole();
+      });
+    }
+  });
+  </script>
 </head>
 <body>
   <header>
-    <h1>🎯 Gerador de Contratos v2.1</h1>
+    <h1>🎯 Gerador de Contratos v3.0</h1>
     <div class="sub">
-      Sistema profissional para geração de contratos educacionais com cálculo automático, 
-      templates personalizáveis e exportação em PDF/DOCX/JSON.
+      Feito por G. S. Sousa
     </div>
   </header>
 
   <main class="grid">
     <!-- Configurações gerais -->
-    <section class="card grid cols-4" id="sec-geral">
+         <section class="card" id="sec-geral">
       <div>
-        <label>Modelo do Contrato</label>
-        <select id="modelo">
-          <option value="Contrato_EJA">Contrato EJA</option>
-          <option value="Contrato_OM">Contrato OM</option>
-          <option value="CONTRATO_OM_DK">Contrato OM-DK</option>
-          <option value="Contrato_TEC">Contrato Técnico</option>
-        </select>
-        <div id="templateStatus" class="hint" style="margin-top: 4px; display: none;">
-          <span id="templateIndicator">📄 Template: <span id="templateName">-</span></span>
-        </div>
+
       </div>
       <div>
         <label>Forma de Pagamento</label>
         <select id="forma">
-          <option value="À vista">À vista</option>
-          <option value="Cartão">Cartão de Crédito</option>
-          <option value="Boleto">Boleto Bancário</option>
+          <option value="avista">À vista</option>
+          <option value="cartao">Cartão de Crédito</option>
+          <option value="boleto">Boleto Bancário</option>
         </select>
       </div>
       <div>
@@ -271,14 +340,20 @@
       </div>
       <div class="inline" style="margin-top:22px; display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <span class="pill" id="pill-status">Auto-cálculo ativo</span>
+          <span class="pill" id="pill-status">Ligado</span>
           <label class="hint">
             <input type="checkbox" id="auto" checked style="width:auto; margin-right:6px"/> 
             Cálculo automático
           </label>
         </div>
-        <button type="button" class="btn ghost" id="btnExemplo" title="F5" style="font-size: 11px; padding: 6px 10px; width: auto; min-width: auto;">
-          📝 Exemplo
+        <button
+          type="button"
+          class="btn ghost"
+          id="btnExemplo"
+          title="F5"
+          style="font-size: 11px; padding: 6px 10px; width: auto; min-width: auto;"
+        >
+          📝
         </button>
       </div>
     </section>
@@ -337,7 +412,12 @@
 
     <!-- Dados do aluno -->
     <section class="card">
-      <h2>Dados do Aluno</h2>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+        <h2 style="margin: 0;">Dados do Aluno</h2>
+        <button type="button" class="btn ghost" id="btnCopiarResp" title="Copiar dados do responsável para o aluno" style="font-size: 11px; padding: 4px 8px; width: auto; min-width: auto;">
+          📋
+        </button>
+      </div>
       <div class="grid cols-4">
         <div style="grid-column: span 2;">
           <label>Nome do aluno</label>
@@ -375,7 +455,7 @@
       <h2>Dados do Curso</h2>
       <div class="grid cols-3">
         <div>
-          <label>Curso profissionalizante</label>
+          <label>Curso</label>
           <input id="curso" placeholder="Nome completo do curso" />
         </div>
         <div>
@@ -429,23 +509,16 @@
       <div class="hint" style="margin-top:12px">
         💡 <strong>Dica:</strong> Preencha pelo menos dois valores financeiros e o sistema calculará automaticamente os demais conforme a forma de pagamento escolhida.
       </div>
-      
-      <!-- Botão de recálculo -->
-      <div style="margin-top: 16px; display: flex; justify-content: center;">
-        <button type="button" class="btn warn" id="btnCalcular" title="F9">
-          🔄 Recalcular Valores
-        </button>
-      </div>
     </section>
 
-    <!-- Sistema de Templates -->
-    <section class="card">
+    <!-- Sistema de Templates (visível para o programa offline) -->
+    <section class="card" id="sec-templates">
       <h2>📋 Sistema de Templates DOCX</h2>
       <div class="grid cols-2" style="margin-bottom: 12px;">
         <div>
           <label>Template de Contrato</label>
           <input type="file" id="templateUpload" accept=".docx" style="margin-bottom: 8px;" />
-          <div class="hint">Envie um arquivo .docx com placeholders {{CAMPO}}</div>
+          <div class="hint">Envie um arquivo .docx com placeholders [CAMPO]</div>
         </div>
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <button type="button" class="btn primary" id="btnPreencherTemplate" disabled>
@@ -476,12 +549,29 @@
           📝 Gerar DOCX
         </button>
       </div>
+      
+      <hr style="border: none; border-top: 1px solid var(--border); margin: 16px 0" />
+      
+      <h3 style="margin: 0 0 12px; font-size: 16px; color: var(--muted);">📊 Histórico de Contratos</h3>
+      <div class="actions" style="margin-top: 12px;">
+        <button type="button" class="btn ghost" id="btnExportarHistorico" title="Exportar histórico completo">
+          📋 Exportar Histórico XLSX
+        </button>
+        <button type="button" class="btn ghost" id="btnVerHistorico" title="Ver contratos salvos">
+          👁️ Ver Histórico (<span id="contadorHistorico">0</span>)
+        </button>
+      </div>
+      
+      <div id="historicoInfo" class="hint" style="display: none; background: rgba(34,197,94,0.1); padding: 12px; border-radius: 8px; margin-top: 12px;">
+        <strong>Histórico:</strong> <span id="historicoDetalhes"></span><br>
+        <small>Os contratos são salvos automaticamente ao gerar DOCX</small>
+      </div>
     </section>
   </main>
 
   <footer>
     <div>
-      <strong>Gerador de Contratos v2.1</strong> • 
+      <strong>Gerador de Contratos v2.2</strong> • 
       Desenvolvido com HTML5, CSS3 e JavaScript • 
       Exportação DOCX/JSON • 
       Sistema de cálculo automático • 
@@ -492,5 +582,576 @@
     </div>
   </footer>
 
+  <!-- Script para copiar dados do responsável para o aluno -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const btnCopiarResp = document.getElementById('btnCopiarResp');
+      
+      if (btnCopiarResp) {
+        btnCopiarResp.addEventListener('click', function() {
+          // Mapear campos do responsável para o aluno
+          const mapeamento = {
+            'nomeResp': 'nomeAluno',
+            'nascResp': 'nascAluno',
+            'cpfResp': 'cpfAluno',
+            'rgResp': 'rgAluno'
+          };
+          
+          let camposCopiados = 0;
+          
+          // Copiar campos preenchidos
+          Object.keys(mapeamento).forEach(campoResp => {
+            const elementoResp = document.getElementById(campoResp);
+            const elementoAluno = document.getElementById(mapeamento[campoResp]);
+            
+            if (elementoResp && elementoAluno && elementoResp.value.trim()) {
+              elementoAluno.value = elementoResp.value;
+              camposCopiados++;
+            }
+          });
+          
+          // Feedback visual
+          if (camposCopiados > 0) {
+            btnCopiarResp.innerHTML = '✅ Copiado!';
+            btnCopiarResp.style.background = 'linear-gradient(180deg, #22c55e, #16a34a)';
+            btnCopiarResp.style.color = 'white';
+            
+            setTimeout(() => {
+              btnCopiarResp.innerHTML = '📋 Copiar do Responsável';
+              btnCopiarResp.style.background = '';
+              btnCopiarResp.style.color = '';
+            }, 2000);
+            
+            console.log(`✅ ${camposCopiados} campos copiados do responsável para o aluno`);
+          } else {
+            btnCopiarResp.innerHTML = '⚠️ Nada para copiar';
+            btnCopiarResp.style.background = 'linear-gradient(180deg, #eab308, #ca8a04)';
+            btnCopiarResp.style.color = 'white';
+            
+            setTimeout(() => {
+              btnCopiarResp.innerHTML = '📋 Copiar do Responsável';
+              btnCopiarResp.style.background = '';
+              btnCopiarResp.style.color = '';
+            }, 2000);
+            
+            console.log('⚠️ Nenhum campo do responsável preenchido para copiar');
+          }
+        });
+      }
+      
+      // Formatação automática do campo de carga horária
+      const campoCarga = document.getElementById('carga');
+      if (campoCarga) {
+        campoCarga.addEventListener('blur', function() {
+          let valor = this.value.trim();
+          
+          // Se o valor contém apenas números, adiciona "h"
+          if (valor && /^\d+$/.test(valor)) {
+            this.value = valor + 'h';
+            console.log(`📚 Carga horária formatada: ${valor} → ${valor}h`);
+          }
+        });
+        
+        // Também formatar ao pressionar Enter
+        campoCarga.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            let valor = this.value.trim();
+            
+            if (valor && /^\d+$/.test(valor)) {
+              this.value = valor + 'h';
+              console.log(`📚 Carga horária formatada: ${valor} → ${valor}h`);
+            }
+            
+            // Move o foco para o próximo campo
+            const proximoCampo = document.getElementById('contrato');
+            if (proximoCampo) proximoCampo.focus();
+          }
+        });
+      }
+      
+      // Sistema de Histórico de Contratos
+      const STORAGE_KEY = 'gerador_historico_contratos';
+      
+      // Função para obter todos os dados do formulário
+  window.obterDadosFormulario = function obterDadosFormulario() {
+        const campos = [
+          'modelo', 'forma', 'data', 'nomeResp', 'nascResp', 'cpfResp', 'rgResp', 'telResp',
+          'endereco', 'numero', 'bairro', 'cep', 'cidadeUf', 'nomeAluno', 'nascAluno', 
+          'sexoAluno', 'rgAluno', 'cpfAluno', 'raAluno', 'curso', 'carga', 'contrato',
+          'avista', 'entrada', 'nParcelas', 'parcela', 'diaVenc', 'desconto', 'total'
+        ];
+        
+        const dados = {};
+        campos.forEach(campo => {
+          const elemento = document.getElementById(campo);
+          if (elemento) {
+            dados[campo] = elemento.value || '';
+          }
+        });
+        
+        // Adiciona timestamp e ID único
+        dados._timestamp = new Date().toISOString();
+        dados._id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+        dados._dataFormatada = new Date().toLocaleString('pt-BR');
+        
+        return dados;
+  }
+      
+      // Função para salvar contrato no histórico (exposta no escopo global)
+      window.salvarContratoNoHistorico = function salvarContratoNoHistorico() {
+        try {
+          const dadosContrato = (window.obterDadosFormulario && window.obterDadosFormulario());
+          if (!dadosContrato) throw new Error('obterDadosFormulario indisponível');
+          
+          // Obtém histórico existente
+          let historico = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+          
+          // Adiciona novo contrato
+          historico.push(dadosContrato);
+          
+          // Limita a 100 contratos (evita ocupar muito espaço)
+          if (historico.length > 100) {
+            historico = historico.slice(-100);
+          }
+          
+          // Salva de volta no localStorage
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(historico));
+          
+          // Atualiza contador na interface
+          window.atualizarContadorHistorico && window.atualizarContadorHistorico();
+          
+          console.log('✅ Contrato salvo no histórico:', dadosContrato.contrato || dadosContrato._id);
+          
+          // Mostra feedback visual
+          window.mostrarFeedbackHistorico && window.mostrarFeedbackHistorico(`Contrato ${dadosContrato.contrato || 'sem número'} salvo no histórico!`);
+          
+        } catch (error) {
+          console.error('❌ Erro ao salvar contrato no histórico:', error);
+        }
+      }
+      
+      // Função para atualizar contador na interface
+  window.atualizarContadorHistorico = function atualizarContadorHistorico() {
+        try {
+          const historico = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+          const contador = document.getElementById('contadorHistorico');
+          if (contador) {
+            contador.textContent = historico.length;
+          }
+        } catch (error) {
+          console.error('❌ Erro ao atualizar contador:', error);
+        }
+  }
+      
+      // Função para mostrar feedback visual
+  window.mostrarFeedbackHistorico = function mostrarFeedbackHistorico(mensagem) {
+        const info = document.getElementById('historicoInfo');
+        const detalhes = document.getElementById('historicoDetalhes');
+        
+        if (info && detalhes) {
+          detalhes.textContent = mensagem;
+          info.style.display = 'block';
+          
+          setTimeout(() => {
+            info.style.display = 'none';
+          }, 3000);
+        }
+  }
+      
+      // Função para exportar histórico para XLSX
+  window.exportarHistoricoXLSX = function exportarHistoricoXLSX() {
+        try {
+          const historico = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+          
+          if (historico.length === 0) {
+            alert('⚠️ Nenhum contrato no histórico para exportar.');
+            return;
+          }
+          
+          // Prepara dados para XLSX
+          const dadosExport = historico.map(contrato => ({
+            'Data/Hora': contrato._dataFormatada,
+            'Número Contrato': contrato.contrato,
+            'Modelo': contrato.modelo,
+            'Forma Pagamento': contrato.forma,
+            'Data Contrato': contrato.data,
+            'Nome Responsável': contrato.nomeResp,
+            'CPF Responsável': contrato.cpfResp,
+            'Telefone Responsável': contrato.telResp,
+            'Endereço': contrato.endereco,
+            'Número': contrato.numero,
+            'Bairro': contrato.bairro,
+            'CEP': contrato.cep,
+            'Cidade/UF': contrato.cidadeUf,
+            'Nome Aluno': contrato.nomeAluno,
+            'Nasc. Aluno': contrato.nascAluno,
+            'Sexo Aluno': contrato.sexoAluno,
+            'CPF Aluno': contrato.cpfAluno,
+            'RA Aluno': contrato.raAluno,
+            'Curso': contrato.curso,
+            'Carga Horária': contrato.carga,
+            'Valor À Vista': contrato.avista,
+            'Valor Entrada': contrato.entrada,
+            'Nº Parcelas': contrato.nParcelas,
+            'Valor Parcela': contrato.parcela,
+            'Dia Vencimento': contrato.diaVenc,
+            'Desconto': contrato.desconto,
+            'Valor Total': contrato.total
+          }));
+          
+          // Cria workbook e worksheet
+          const wb = XLSX.utils.book_new();
+          const ws = XLSX.utils.json_to_sheet(dadosExport);
+          
+          // Ajusta largura das colunas
+          const colWidths = [
+            {wch: 20}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 12},
+            {wch: 25}, {wch: 15}, {wch: 15}, {wch: 30}, {wch: 8},
+            {wch: 20}, {wch: 12}, {wch: 15}, {wch: 25}, {wch: 12},
+            {wch: 10}, {wch: 15}, {wch: 12}, {wch: 25}, {wch: 12},
+            {wch: 12}, {wch: 12}, {wch: 10}, {wch: 12}, {wch: 10},
+            {wch: 12}, {wch: 12}
+          ];
+          ws['!cols'] = colWidths;
+          
+          // Adiciona worksheet ao workbook
+          XLSX.utils.book_append_sheet(wb, ws, 'Histórico Contratos');
+          
+          // Gera nome do arquivo com data atual
+          const agora = new Date();
+          const dataArquivo = agora.toISOString().split('T')[0];
+          const nomeArquivo = `Historico_Contratos_${dataArquivo}.xlsx`;
+          
+          // Faz download
+          XLSX.writeFile(wb, nomeArquivo);
+          
+          console.log(`📊 Histórico exportado: ${nomeArquivo} (${historico.length} contratos)`);
+          window.mostrarFeedbackHistorico && window.mostrarFeedbackHistorico(`${historico.length} contratos exportados para ${nomeArquivo}`);
+          
+        } catch (error) {
+          console.error('❌ Erro ao exportar histórico:', error);
+          alert('❌ Erro ao exportar histórico. Verifique o console para detalhes.');
+        }
+  }
+      
+      // Event Listeners para os botões de histórico
+      const btnExportarHistorico = document.getElementById('btnExportarHistorico');
+      if (btnExportarHistorico) {
+        btnExportarHistorico.addEventListener('click', () => window.exportarHistoricoXLSX && window.exportarHistoricoXLSX());
+      }
+      
+      const btnVerHistorico = document.getElementById('btnVerHistorico');
+      if (btnVerHistorico) {
+        btnVerHistorico.addEventListener('click', function() {
+          try {
+            const historico = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            
+            if (historico.length === 0) {
+              alert('📋 Nenhum contrato no histórico ainda.');
+              return;
+            }
+            
+            // Mostra os últimos 10 contratos
+            const ultimos = historico.slice(-10).reverse();
+            let mensagem = `📊 Últimos ${ultimos.length} contratos:\n\n`;
+            
+            ultimos.forEach((contrato, index) => {
+              mensagem += `${index + 1}. ${contrato.contrato || 'S/N'} - ${contrato.nomeAluno || 'S/N'} - ${contrato._dataFormatada}\n`;
+            });
+            
+            mensagem += `\n💾 Total: ${historico.length} contratos salvos`;
+            alert(mensagem);
+            
+          } catch (error) {
+            console.error('❌ Erro ao visualizar histórico:', error);
+          }
+        });
+      }
+      
+      // Hook não-destrutivo será adicionado no script final da página
+      
+      // Inicializa contador ao carregar a página
+      window.atualizarContadorHistorico && window.atualizarContadorHistorico();
+    });
+  </script>
+
+  <!-- Modal de relatório técnico do download DOCX -->
+  <div id="relatorio-modal" aria-hidden="true">
+    <div id="relatorio-backdrop"></div>
+    <div id="relatorio-card" role="dialog" aria-modal="true" aria-labelledby="relatorio-title">
+      <div id="relatorio-header">
+        <div id="relatorio-title">Relatório Técnico — Fluxo de Download do DOCX</div>
+        <button id="relatorio-close" class="btn-rel">✕</button>
+      </div>
+      <div id="relatorio-body">
+        <pre id="relatorio-pre">Gerando…</pre>
+      </div>
+      <div id="relatorio-actions">
+        <button id="relatorio-save-txt" class="btn-rel">Baixar .txt</button>
+        <button id="relatorio-save-json" class="btn-rel">Baixar .json</button>
+        <button id="relatorio-ok" class="btn-rel primary">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    // --- elementos do modal
+    const $ = (sel)=>document.querySelector(sel);
+    const modal = $('#relatorio-modal');
+    const pre   = $('#relatorio-pre');
+
+    const state = {
+      t: {}, // timestamps
+      campos: {}, // snapshot dos campos
+      gen: null,  // info de geração {filename, size}
+      dwn: null   // info de download {filename}
+    };
+
+    function ts(){ return new Date().toISOString(); }
+    function ms(d1,d2){ return Math.max(0, Math.round((d2-d1))); }
+
+    // coleta rápida dos campos importantes (não altera nada)
+    function coletarCampos(){
+      const get = id => document.getElementById(id)?.value || '';
+      return {
+        modelo: get('modelo'),
+        forma: get('forma'),
+        dataContrato: get('data'),
+        responsavel: get('nomeResp'),
+        aluno: get('nomeAluno'),
+        curso: get('curso'),
+        valorTotal: get('total'),
+        template: document.getElementById('templateUpload')?.files?.[0]?.name || '(nenhum)'
+      };
+    }
+
+    // abre/fecha modal
+    function abrir(texto) {
+      pre.textContent = texto || '';
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden','false');
+    }
+    function fechar() {
+      modal.classList.remove('show');
+      modal.setAttribute('aria-hidden','true');
+    }
+
+    // monta relatório técnico
+    function montarRelatorio(){
+      const ua = navigator.userAgent;
+      const libs = {
+        docx: !!(window.docx && window.docx.Packer && window.docx.Document),
+        PizZip: !!window.PizZip,
+        Docxtemplater: !!(window.Docxtemplater || window.docxtemplater)
+      };
+
+      const t0 = state.t.clique || 0;
+      const t1 = state.t.dispatch || t0;
+      const t2 = state.t.gerado   || t1;
+      const t3 = state.t.download || t2;
+
+      const resumo = [
+        'Relatório Técnico: Fluxo de Download do DOCX',
+        `Início: ${new Date(t0).toLocaleString()}  |  Término: ${new Date(t3).toLocaleString()}`,
+        '',
+        '1) Gatilho do Download',
+        '• Botão 📝 Gerar DOCX (#btnDocx) clicado pelo usuário.',
+        '• Salvamento no histórico executado pelo handler do botão.',
+        "• Evento customizado disparado: window.dispatchEvent(new CustomEvent('gerarDocx')).",
+        '',
+        '2) Implementação do Download',
+        '• Template processado e DOCX gerado com Docxtemplater/PizZip.',
+        '• Blob → URL temporária via URL.createObjectURL(blob).',
+        '• <a download> criado dinamicamente e clique simulado.',
+        '• URL revogada após o oferecimento do download.',
+        '',
+        '3) Registro e Diagnóstico',
+        '• Evento docx:generated e docx:downloaded observados para auditoria.',
+        '• Este relatório foi mostrado automaticamente ao download.',
+        '',
+        '4) Pontos de Atenção',
+        '• Download automático (sem interação extra após o clique).',
+        '• Nome do arquivo: ' + (state.gen?.filename || state.dwn?.filename || '(desconhecido)'),
+        '',
+        '--- Cronologia (ms) ---',
+        `Clique (#btnDocx):      ${new Date(t0).toLocaleTimeString()} (T0)`,
+        `Dispatch 'gerarDocx':   ${new Date(t1).toLocaleTimeString()}  +${ms(t0,t1)}ms`,
+        `DOCX gerado:            ${new Date(t2).toLocaleTimeString()}  +${ms(t1,t2)}ms`,
+        `Download ofertado:      ${new Date(t3).toLocaleTimeString()}  +${ms(t2,t3)}ms`,
+        `Total do fluxo:         ${ms(t0,t3)}ms`,
+        '',
+        '--- Ambiente ---',
+        `Bibliotecas: ${JSON.stringify(libs)}`,
+        `Navegador: ${ua}`,
+        '',
+        '--- Campos do Formulário ---',
+        JSON.stringify(state.campos, null, 2),
+        '',
+        '--- Arquivo ---',
+        `Gerado: ${state.gen ? 'sim' : 'não'}`,
+        state.gen ? `• Nome: ${state.gen.filename}\n• Tamanho: ${state.gen.size} bytes` : '',
+      ].join('\n');
+
+      return resumo;
+    }
+
+    // ações dos botões do modal
+    $('#relatorio-close').addEventListener('click', fechar);
+    $('#relatorio-ok').addEventListener('click', fechar);
+    $('#relatorio-save-txt').addEventListener('click', () => {
+      const blob = new Blob([pre.textContent], {type:'text/plain;charset=utf-8'});
+      const url = URL.createObjectURL(blob); const a = document.createElement('a');
+      a.href = url; a.download = 'relatorio_exportacao.txt'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 500);
+    });
+    $('#relatorio-save-json').addEventListener('click', () => {
+      const json = {
+        timeline: state.t,
+        campos: state.campos,
+        generated: state.gen,
+        downloaded: state.dwn,
+        libs: { docx: !!(window.docx && window.docx.Packer && window.docx.Document), PizZip: !!window.PizZip, Docxtemplater: !!(window.Docxtemplater || window.docxtemplater) },
+        ua: navigator.userAgent
+      };
+      const blob = new Blob([JSON.stringify(json,null,2)], {type:'application/json;charset=utf-8'});
+      const url = URL.createObjectURL(blob); const a = document.createElement('a');
+      a.href = url; a.download = 'relatorio_exportacao.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 500);
+    });
+
+    // --- timeline: capturas discretas do fluxo (sem interferir no seu código)
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('btnDocx');
+      if (btn) {
+        btn.addEventListener('click', () => {
+          state.t.clique = Date.now();
+          state.campos = coletarCampos();
+        }, { capture: true });
+      }
+    });
+
+    window.addEventListener('gerarDocx', () => { state.t.dispatch = Date.now(); }, { capture: true });
+    window.addEventListener('docx:generated', (e) => {
+      state.t.gerado = Date.now();
+      state.gen = e.detail || null;
+    }, { capture: true });
+
+    // Quando o download é ofertado: monta e abre o popup
+    window.addEventListener('docx:downloaded', (e) => {
+      state.t.download = Date.now();
+      state.dwn = e.detail || null;
+      const texto = montarRelatorio();
+      abrir(texto);
+    }, { capture: true });
+  })();
+  </script>
+<script>
+/* Hook passivo para detectar geração/baixar DOCX */
+(function () {
+  if (window.__docxDownloadHookInstalled) return;
+  window.__docxDownloadHookInstalled = true;
+
+  console.log('[Hook] Sistema de interceptação de download instalado');
+
+  // Intercepta clique em links de download .docx
+  document.addEventListener('click', function(e) {
+    const target = e.target.closest('a');
+    if (target && target.getAttribute('download') && 
+        target.getAttribute('download').toLowerCase().endsWith('.docx')) {
+      
+      const filename = target.getAttribute('download');
+      console.log('[Hook] Download DOCX detectado:', filename);
+      
+      // Dispara evento de download
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('docx:downloaded', {
+          detail: { filename }
+        }));
+      }, 100);
+    }
+  }, true);
+})();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const btnDocx = document.getElementById('btnDocx');
+  if (!btnDocx) return;
+
+  // captura: roda antes dos outros handlers SEM remover ninguém
+  btnDocx.addEventListener('click', function () {
+    try { window.salvarContratoNoHistorico && window.salvarContratoNoHistorico(); } catch (e) { console.warn(e); }
+    // deixa os demais listeners fazerem a geração
+  }, true);
+});
+</script>
+
+  <!-- ✅ Popup visual de download concluído -->
+  <script>
+  (function() {
+    // cria e estiliza o popup (uma vez só)
+    const toast = document.createElement('div');
+    toast.id = 'popup-download';
+    Object.assign(toast.style, {
+      position: 'fixed',
+      right: '20px',
+      bottom: '20px',
+      background: 'linear-gradient(180deg,#22c55e,#16a34a)',
+      color: '#fff',
+      padding: '14px 18px',
+      borderRadius: '12px',
+      boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: '14px',
+      lineHeight: '1.4',
+      opacity: '0',
+      transform: 'translateY(10px)',
+      transition: 'opacity .3s, transform .3s',
+      zIndex: '9999'
+    });
+    document.body.appendChild(toast);
+
+    // logs para checar que carregou
+    console.log('[Popup] Listener ativo');
+
+    // mostra a mensagem por alguns segundos
+    function showPopup(msg) {
+      toast.textContent = msg;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+      }, 4000);
+    }
+
+    // Flag para saber se o download foi disparado por atalho
+    let downloadPorAtalho = false;
+
+    // Detecta Ctrl+D
+    document.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D')) {
+        downloadPorAtalho = true;
+        setTimeout(() => { downloadPorAtalho = false; }, 2000); // reseta após 2s
+      }
+    });
+
+    // escuta o evento de download já emitido pelo exports.js
+    window.addEventListener('docx:downloaded', (e) => {
+      if (downloadPorAtalho) {
+        const filename = e.detail?.filename || 'Contrato_preenchido.docx';
+        showPopup(`✅ Download concluído!\n${filename}`);
+      }
+    });
+
+    // opcional: também exibir quando o DOCX for gerado internamente
+    window.addEventListener('docx:generated', (e) => {
+      if (downloadPorAtalho) {
+        const filename = e.detail?.filename || 'Contrato.docx';
+        showPopup(`📄 Documento gerado: ${filename}`);
+      }
+    });
+  })();
+  </script>
 </body>
-</html>
+<!-- Removido </html> duplicado -->
+ </html>

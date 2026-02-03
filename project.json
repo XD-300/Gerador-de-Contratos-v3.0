@@ -1,64 +1,174 @@
 {
-  "name": "Gerador de Contratos",
-  "version": "2.1.0",
-  "description": "Sistema profissional para geração de contratos educacionais",
+  "name": "Gerador de Contratos Educacionais",
+  "version": "2.2.0",
+  "description": "SPA avançada para geração automática de contratos educacionais, cálculos financeiros, validação inteligente e exportação DOCX/XLSX/JSON.",
   "main": "index.html",
-  "scripts": {
-    "test": "Abra tests/teste-final-sistema.html",
-    "test-templates": "Abra tests/teste-templates.html",
-    "test-download": "Abra tests/teste-download-docx.html"
+  "keywords": [
+    "contratos",
+    "educacional",
+    "gerador",
+    "docx",
+    "validação",
+    "cálculo automático",
+    "template",
+    "SPA",
+    "javascript"
+  ],
+  "badges": [
+    "stable",
+    "mobile-first",
+    "tested",
+    "internal-use"
+  ],
+  "homepage": "https://contratos-educacionais.local",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/contratos-educacionais/gerador"
+  },
+  "bugs": {
+    "url": "https://github.com/contratos-educacionais/gerador/issues"
+  },
+  "author": [
+    {
+      "name": "Guilherme Silva",
+      "role": "Lead Developer"
+    },
+  ],
+    "license": "Uso Interno",
+  "created": "2025-10-02",
+  "updated": "2025-12-04",
+  "changelog": [
+    {
+      "version": "2.2.0",
+      "date": "2025-12-04",
+      "changes": [
+        "Refatoração completa do motor de cálculo automático",
+        "Validação universal de campos",
+        "Exportação de UF sempre em maiúsculo",
+        "Atualização dos templates DOCX",
+        "Histórico local de contratos gerados"
+      ]
+    },
+    {
+      "version": "2.1.0",
+      "date": "2025-10-02",
+      "changes": [
+        "Primeira versão estável",
+        "Exportação DOCX e XLSX",
+        "Interface mobile-first"
+      ]
+    }
+  ],
+  "roadmap": [
+    "Integração com assinatura digital",
+    "Exportação para PDF",
+    "Dashboard de contratos gerados",
+    "API REST para integração externa",
+    "Internacionalização (i18n)"
+  ],
+  "support": {
+    "email": "suporte@contratos.com",
+    "faq": "docs/FAQ.md",
+    "docs": "docs/GUIA_COMPLETO.md"
+  },
+  "environment": {
+    "node": ">=18.0.0",
+    "browsers": ["Chrome 100+", "Firefox 100+", "Safari 15+", "Edge 100+"],
+    "mobile": ["iOS Safari 15+", "Chrome Mobile 100+", "Samsung Internet 15+"],
+    "os": ["Windows 10+", "macOS 12+", "Linux"]
+  },
+  "build": {
+    "tool": "Vite",
+    "scripts": {
+      "dev": "vite",
+      "build": "vite build",
+      "preview": "vite preview"
+    }
   },
   "structure": {
-    "src/": "Código fonte principal",
-    "src/core/": "Módulos JavaScript",
-    "src/styles/": "Folhas de estilo CSS",
-    "tests/": "Arquivos de teste e diagnóstico",
-    "docs/": "Documentação completa",
-    "templates/": "Templates de exemplo DOCX",
-    "examples/": "Arquivos de exemplo e referência",
-    "libs/": "Bibliotecas locais (opcional)"
+    "src/": "Código fonte principal JS/CSS",
+    "src/core/": "Lógica de domínio, cálculos, exportação",
+    "src/auto-calc/": "Motor de cálculo automático",
+    "src/styles/": "Folhas de estilo",
+    "templates/": "Templates DOCX reais",
+    "libs/": "Bibliotecas locais (Docxtemplater, PizZip, XLSX)",
+    "tests/": "Testes e diagnósticos",
+    "docs/": "Documentação e exemplos"
   },
   "dependencies": {
     "jspdf": "2.5.1",
-    "docx": "7.8.2"
+    "docx": "9.5.1",
+    "xlsx": "0.18.5",
+    "pizzip": "3.1.5",
+    "docxtemplater": "3.32.0"
+  },
+  "devDependencies": {
+    "vite": "5.0.0",
+    "eslint": "8.56.0"
   },
   "features": [
-    "Geração automática de contratos",
-    "Sistema de templates DOCX personalizáveis",
-    "Cálculo automático de valores financeiros",
-    "Exportação PDF/DOCX/JSON",
-    "Interface responsiva mobile/desktop",
-    "Validação inteligente de dados",
-    "Sistema de testes automatizado"
+    "Geração automática de contratos educacionais",
+    "Templates DOCX personalizáveis e dinâmicos",
+    "Motor de cálculo financeiro inteligente",
+    "Exportação para DOCX",
+    "Validação inteligente de todos os campos",
+    "Interface responsiva e mobile-first",
+    "Histórico local de contratos gerados",
+    "Testes automatizados e diagnósticos visuais",
+    "Sistema de templates com placeholders dinâmicos",
+    "Relatórios de auditoria e diagnóstico",
+    "Persistência local via localStorage",
+    "Fallback automático para bibliotecas via CDN"
   ],
   "compatibility": {
-    "browsers": ["Chrome 90+", "Firefox 88+", "Safari 14+", "Edge 90+"],
-    "mobile": ["iOS Safari 14+", "Chrome Mobile 90+", "Samsung Internet 13+"]
+    "browsers": ["Chrome 100+", "Firefox 100+", "Safari 15+", "Edge 100+"],
+    "mobile": ["iOS Safari 15+", "Chrome Mobile 100+", "Samsung Internet 15+"],
+    "os": ["Windows 10+", "macOS 12+", "Linux"]
   },
   "files": {
     "main": "index.html",
-    "offline": "index-offline.html",
     "readme": "README.md",
     "core": [
       "src/core/utils.js",
-      "src/core/calculations.js", 
+      "src/core/calculations.js",
       "src/core/exports.js",
-      "src/core/main.js"
+      "src/core/main.js",
+      "src/auto-calc/engine.js",
+      "src/auto-calc/init.js"
     ],
-    "styles": ["src/styles/styles.css"],
+    "styles": [
+      "src/styles/main.css",
+      "src/styles/auto-calc.css",
+      "src/styles/validations.css"
+    ],
     "tests": [
       "tests/teste-final-sistema.html",
       "tests/teste-templates.html",
-      "tests/teste-download-docx.html"
+      "tests/teste-download-docx.html",
+      "tests/interface.html"
     ],
     "docs": [
       "docs/GUIA_COMPLETO.md",
-      "docs/MOBILE_GUIDE.md", 
-      "docs/PUBLICACAO_ONLINE.md"
+      "docs/MOBILE_GUIDE.md",
+      "docs/PUBLICACAO_ONLINE.md",
+      "docs/ATUALIZACAO_CONCLUIDA.md",
+      "docs/FAQ.md"
+    ],
+    "templates": [
+      "templates/CONTRATO_DE_PRESTACAO_DE_SERVICO.docx",
+   ],
+    "backups": [
+      "docs/backups/exports_snippet.txt"
     ]
   },
-  "author": "Sistema Gerador de Contratos",
-  "license": "Uso Interno",
-  "created": "2025-10-02",
-  "updated": "2025-10-02"
+  "history": [
+    {
+      "date": "2025-12-04",
+      "event": "Atualização completa do sistema, validação universal e exportação aprimorada."
+    },
+    {
+      "date": "2025-10-02",
+      "event": "Lançamento da versão estável inicial."
+    }
+  ]
 }

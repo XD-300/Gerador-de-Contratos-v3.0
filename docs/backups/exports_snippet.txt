@@ -1,0 +1,1 @@
+Backup marker: We will replace the _loadTemplateFromModel method next via patch.
